@@ -466,6 +466,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .job__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
 button.job__media { cursor: pointer; font: inherit; }
+.job__pics { display: grid; gap: 10px; align-content: start; min-width: 0; }
 button.job__media:hover img { transform: scale(1.04); }
 button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .job__media--mono {
@@ -495,6 +496,8 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
   .job__card { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
   .job__media { order: -1; aspect-ratio: 16 / 10; }
   .job__media--mono { display: none; }
+  .job__pics { order: -1; grid-template-columns: 1fr 1fr; }
+  .job__pics .job__media { aspect-ratio: 1 / 1; }
 }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -982,6 +985,7 @@ window.PROFILE = {
       ],
       tags: ["Public speaking", "Recruitment"],
       image: { src: "images/ouf-zidan.jpg", alt: "Zidan in a McMaster polo at the Ontario Universities' Fair", pos: "50% 45%" },
+      image2: { src: "images/ambassador-table.jpg", alt: "Zidan at a McMaster Engineering table talking with a visitor", pos: "50% 48%" },   // optional second picture, shown with the first
       details: {
         intro: "I represent the Faculty of Engineering to prospective students and their families.",
         sections: [
@@ -1238,14 +1242,18 @@ window.PROFILE = {
 
   // The one picture on a job card. With a details panel it is also a button that opens the panel.
   function jobMedia(e, sheetData) {
-    const src = safeUrl(e.image && e.image.src);
-    if (!src) return h('div', { class: 'job__media job__media--mono', 'aria-hidden': 'true', text: monogram(e.company) });
-    const img = h('img', { src, alt: e.image.alt || '', loading: 'lazy', decoding: 'async' });
-    if (e.image.pos) img.style.objectPosition = e.image.pos;
-    if (!sheetData) return h('figure', { class: 'job__media' }, img);
-    const btn = h('button', { class: 'job__media', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': `More details: ${e.role}` }, img);
-    btn.addEventListener('click', () => openSheet(sheetData()));
-    return btn;
+    const one = (pic, label) => {
+      const img = h('img', { src: safeUrl(pic.src), alt: pic.alt || '', loading: 'lazy', decoding: 'async' });
+      if (pic.pos) img.style.objectPosition = pic.pos;
+      if (!sheetData) return h('figure', { class: 'job__media' }, img);
+      const btn = h('button', { class: 'job__media', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': label }, img);
+      btn.addEventListener('click', () => openSheet(sheetData()));
+      return btn;
+    };
+    if (!safeUrl(e.image && e.image.src)) return h('div', { class: 'job__media job__media--mono', 'aria-hidden': 'true', text: monogram(e.company) });
+    const first = one(e.image, `More details: ${e.role}`);
+    if (!safeUrl(e.image2 && e.image2.src)) return first;
+    return h('div', { class: 'job__pics' }, first, one(e.image2, `More details: ${e.role}, second photo`));
   }
 
   function renderExperience() {
@@ -1257,6 +1265,7 @@ window.PROFILE = {
         title: e.role,
         sub: e.company,
         lead: e.image,
+        images: e.image2 ? [e.image2] : [],
         intro: e.details.intro,
         fact: e.details.fact,
         sections: e.details.sections,
