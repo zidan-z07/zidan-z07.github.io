@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Zidan Zuberi | Automotive Engineering Technology Student, McMaster University</title>
-<meta name="description" content="Second-year Automotive &amp; Vehicle Engineering Technology student at McMaster University, looking for a Summer 2027 co-op in automotive manufacturing and EV.">
+<meta name="description" content="Second-year Automotive &amp; Vehicle Engineering Technology student at McMaster University, looking for a Summer 2027 co-op in project coordination in automotive and EV.">
 <link rel="canonical" href="https://zidanzuberi.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zidanzuberi.com/">
 <meta property="og:title" content="Zidan Zuberi | Automotive Engineering Technology Student, McMaster University">
-<meta property="og:description" content="Second-year Automotive &amp; Vehicle Engineering Technology student at McMaster University, looking for a Summer 2027 co-op in automotive manufacturing and EV.">
+<meta property="og:description" content="Second-year Automotive &amp; Vehicle Engineering Technology student at McMaster University, looking for a Summer 2027 co-op in project coordination in automotive and EV.">
 <meta property="og:image" content="https://zidanzuberi.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -409,6 +409,12 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- About ---------- */
 .about { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.goal {
+  margin-top: 24px; padding: 18px 20px; display: grid; gap: 8px;
+  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+}
+.goal__label { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
+.goal__text { color: var(--ink); }
 .prose { max-width: 64ch; font-size: 1.1rem; min-width: 0; color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
 
 .idcard {
@@ -879,7 +885,7 @@ window.PROFILE = {
   person: {
     name: "Zidan Zuberi",                            // first word renders solid, the rest outlined
     role: "Automotive & Vehicle Engineering Technology",
-    tagline: "I'm looking for a Summer 2027 co-op in automotive manufacturing and EV. I build things that plug into cars, represent McMaster Engineering at recruitment events, and lead a volunteer team.",
+    tagline: "I'm looking for a Summer 2027 co-op in project coordination in automotive and EV. I build things that plug into cars, represent McMaster Engineering at recruitment events, and lead a volunteer team.",
     status: "2nd year · McMaster Engineering",       // the pill above your name ("" to hide)
     facts: [                                         // the info strip under the buttons
       { label: "Based in", value: "Oakville, Ontario" },
@@ -894,6 +900,11 @@ window.PROFILE = {
     { label: "GitHub",    url: "https://github.com/zidan-z07" },
     { label: "YouTube",   url: "https://www.youtube.com/@ZIZUBerry" }
   ],
+
+  goal: {                                           // the highlighted box at the end of About
+    heading: "What I'm working toward",
+    text: "Project management in automotive and EV. I do my best work in front of people: leading a team, presenting, and keeping a lot of moving parts on track. My next step is a Summer 2027 co-op in project coordination."
+  },
 
   about: "I'm a second-year Bachelor of Technology student in Automotive and Vehicle Engineering Technology at McMaster. I started in Automation Systems Engineering Technology and transferred internally once I knew vehicles were what I wanted to work on. Right now I'm building an OBD-II assistant on a Raspberry Pi and designing parts with the McMaster Tech Club autonomous vehicle team. In summer 2026 I taught hands-on engineering to kids in Grades 3 to 9. I'm looking for a Summer 2027 co-op where I can learn how vehicles actually get built, with a long-term interest in EV.",
 
@@ -934,13 +945,23 @@ window.PROFILE = {
         summary: "Example: asking \"is my engine running hot?\" makes the model call get_coolant_temp, one of its six OBD-II tools."
       },
       repo: "https://github.com/zidan-z07/car-ai",                                      // GitHub link for this project ("" hides the button)
-      caseStudy: {                                   // optional: a short write-up shown under the card
-        title: "Case study: designing the enclosure",
+      caseStudy: {                                   // the write-up behind the "How I ran it" button
+        button: "How I ran it",
+        title: "How I ran my part of the project",
         steps: [
-          { heading: "The job", text: "The Raspberry Pi, its cooler and the 7-inch touchscreen needed one housing, with the screen and camera left open. Ibrahim took the lead on the AI model. I took the enclosure and helped with the Python. I measured the display and the Pi stack and built the model around those numbers." },
-          { heading: "What went wrong", text: "My early version blocked access to the Pi's ports once everything was assembled, so the vent layout had to change." },
-          { heading: "What I changed", text: "Version 3 is three parts: a front frame that holds the screen, a back pod for the Pi and cooler with an open top and U-shaped port slots, and a separate vented lid that presses into place." },
-          { heading: "Designed to be printed", text: "I shaped each part to print without supports: the frame face down, the pod open side up, and the lid flat. It is designed for ASA or ABS because PLA softens in a hot car, and the two halves join with M3 screws into heat-set inserts." }
+          { heading: "The goal", text: "Build a car assistant that answers plain-English questions like \"is my engine running hot?\" using an AI model running on a Raspberry Pi, with nothing sent to the cloud." },
+          { heading: "The team and my role", text: "Two of us. Ibrahim led the AI and software side. I owned the hardware enclosure and helped write the Python that reads live data from the ELM327 adapter." },
+          { heading: "What I had to plan around", items: [
+            "One housing for the Pi, its cooler and a 7-inch touchscreen, with the screen and camera left open.",
+            "Every port still reachable once assembled.",
+            "Heat in a parked car, so ASA or ABS instead of PLA, which softens.",
+            "Parts that print without supports."
+          ] },
+          { heading: "Milestones", items: [
+            "Version 1: built around measurements I took of the display and the Pi stack. Once assembled, it blocked access to the ports.",
+            "Versions 2 and 3: reworked the vent layout and port access, ending in three parts: a front frame for the screen, a back pod with an open top and U-shaped port slots, and a press-fit vented lid, joined with M3 screws into heat-set inserts."
+          ] },
+          { heading: "Where it stands", text: "Tested on a real car, a 2013 Ford Fusion: the Pi read live sensor values and stored fault codes, and the AI model ran on the Pi and answered questions using its six OBD-II tools." }
         ]
       },
       images: [
@@ -1120,7 +1141,7 @@ window.PROFILE = {
 
   contact: {
     heading: "Let's talk about cars.",               // the last word is highlighted
-    blurb: "I'm looking for a Summer 2027 co-op in automotive manufacturing and EV. Email is the best way to reach me."
+    blurb: "I'm looking for a Summer 2027 co-op in project coordination in automotive and EV. Email is the best way to reach me."
   },
 
   footer: "© 2026 Zidan Zuberi"
@@ -1270,6 +1291,10 @@ window.PROFILE = {
 
   function renderAbout() {
     if (P.about) $('#about-body').append(h('p', { text: P.about }));
+    if (P.goal && P.goal.text) $('#about-body').append(h('div', { class: 'goal' },
+      P.goal.heading ? h('p', { class: 'goal__label', text: P.goal.heading }) : null,
+      h('p', { class: 'goal__text', text: P.goal.text })
+    ));
 
     // Education card; tilts in 3D like the project cards.
     const edu = P.education;
@@ -1369,7 +1394,7 @@ window.PROFILE = {
       h('img', { src: safeUrl(img.src), alt: img.alt || `${title} photo ${i + 1}`, loading: i ? 'lazy' : 'eager', decoding: 'async', width: 1000, height: 700 }));
   }
 
-  const caseSteps = (p) => list(p.caseStudy && p.caseStudy.steps).filter((st) => st.heading && st.text);
+  const caseSteps = (p) => list(p.caseStudy && p.caseStudy.steps).filter((st) => st.heading && (st.text || list(st.items).length));
 
   function renderProjects() {
     const items = list(P.projects).slice().sort((a, b) => (b.featured === true) - (a.featured === true));
@@ -1399,7 +1424,7 @@ window.PROFILE = {
           list(p.highlights).length ? h('ul', { class: 'job__wins' }, list(p.highlights).map((t) => h('li', { text: t }))) : null,
           list(p.tech).length ? chips(p.tech, 'Tools') : null,
           (caseSteps(p).length || safeUrl(p.repo)) ? h('div', { class: 'card__actions' },
-            caseSteps(p).length ? sheetButton('Case study', () => ({
+            caseSteps(p).length ? sheetButton(p.caseStudy.button || 'Case study', () => ({
               eyebrow: 'Project',
               title: p.title,
               sub: p.caseStudy.title,
@@ -1748,9 +1773,10 @@ window.PROFILE = {
         h('p', { text: d.fact.text }),
         d.fact.copy ? copyButton(d.fact.text) : null
       ) : null,
-      ...list(d.sections).filter((st) => st.heading && st.text).map((st) => h('section', { class: 'sheet__section' },
+      ...list(d.sections).filter((st) => st.heading && (st.text || list(st.items).length)).map((st) => h('section', { class: 'sheet__section' },
         h('h3', { class: 'sheet__label', text: st.heading }),
-        h('p', { text: st.text })
+        st.text ? h('p', { text: st.text }) : null,
+        list(st.items).length ? h('ul', { class: 'job__wins' }, list(st.items).map((t) => h('li', { text: t }))) : null
       )),
       imgs.length ? h('div', { class: `sheet__gallery${d.wide ? ' sheet__gallery--wide' : ''}` },
         imgs.map((img) => h('figure', null, h('img', { src: safeUrl(img.src), alt: img.alt || '', loading: 'lazy', decoding: 'async' })))
