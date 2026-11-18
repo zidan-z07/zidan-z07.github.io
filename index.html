@@ -911,7 +911,11 @@ window.PROFILE = {
         tools: ["get_speed", "get_rpm", "get_coolant_temp", "get_fuel_level", "get_engine_load", "get_fault_codes"],
         questions: [                                 // each question lights up the tool it calls
           { ask: "is my engine running hot?", tool: "get_coolant_temp" },
-          { ask: "do I have any fault codes?", tool: "get_fault_codes" }
+          { ask: "do I have any fault codes?", tool: "get_fault_codes" },
+          { ask: "how fast am I going?", tool: "get_speed" },
+          { ask: "what's my RPM right now?", tool: "get_rpm" },
+          { ask: "how much gas do I have left?", tool: "get_fuel_level" },
+          { ask: "how hard is my engine working?", tool: "get_engine_load" }
         ],
         chain: ["llama3.2:3b on a Raspberry Pi 5", "ELM327", "OBD-II", "2013 Ford Fusion"],
         note: "Runs fully offline, with the model and its tools on the Pi. Ibrahim led the AI side.",
@@ -1138,8 +1142,12 @@ window.PROFILE = {
       setInterval(() => {
         if (document.hidden) return;
         bubble.classList.add('is-swapping');
-        setTimeout(() => { i = (i + 1) % qs.length; show(i); bubble.classList.remove('is-swapping'); }, 260);
-      }, 4200);
+        setTimeout(() => {
+          // jump to a different question at random, so every tool gets its turn
+          let n; do { n = Math.floor(Math.random() * qs.length); } while (n === i);
+          i = n; show(i); bubble.classList.remove('is-swapping');
+        }, 260);
+      }, 3200);
     }
     return el;
   }
