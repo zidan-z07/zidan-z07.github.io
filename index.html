@@ -517,6 +517,8 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .lead__title { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: -.015em; line-height: 1.25; }
 .lead__badge { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 2px 10px; white-space: nowrap; }
 .lead__org { color: var(--accent); font-weight: 600; font-size: 1rem; }
+.lead__org a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.lead__org a:hover { color: var(--ink); }
 
 /* ---------- Projects ---------- */
 .cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
@@ -1038,18 +1040,21 @@ window.PROFILE = {
     {
       title: "Mechanical Member, Automotive Subteam",
       org: "McMaster Tech Club",
+      orgUrl: "https://www.linkedin.com/company/mcmaster-technology-club/",
       badge: "IGVC team",
       description: "Building an autonomous ground vehicle to compete at the Intelligent Ground Vehicle Competition in Michigan."
     },
     {
       title: "BTA Program Representative",
       org: "McMaster Bachelor of Technology",
+      orgUrl: "https://www.linkedin.com/school/wboothsept/",
       badge: "1 of 4 selected",
       description: "One of four program representatives chosen through a competitive selection. Member of the Merch Committee, including the lanyard project."
     },
     {
       title: "Residence Orientation Rep",
-      org: "MKW (Matthews, Keyes and Wallingford)",
+      org: "McMaster Residence Life Team",
+      orgUrl: "https://www.linkedin.com/company/hcs-mcmaster/",
       badge: "Welcome Week",
       description: "Helped first-years move in and settle into residence during move-in weekend and Welcome Week."
     }
@@ -1333,7 +1338,7 @@ window.PROFILE = {
         h('h4', { class: 'lead__title', text: l.title }),
         l.badge ? h('span', { class: 'lead__badge', text: l.badge }) : null
       ),
-      l.org ? h('p', { class: 'lead__org', text: l.org }) : null,
+      l.org ? h('p', { class: 'lead__org' }, safeUrl(l.orgUrl) ? h('a', external(safeUrl(l.orgUrl)), l.org) : l.org) : null,
       l.description ? h('p', { text: l.description }) : null
     )));
     $('#oncampus').hidden = !items.length;
