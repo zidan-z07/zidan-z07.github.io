@@ -609,6 +609,9 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 }
 .badge--cert { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .badge--cert svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
+.cert-groups { display: grid; gap: 18px; margin-top: 4px; }
+.cert-group__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; font-weight: 600; font-size: 1rem; color: var(--ink); }
+.cert-group__issuer { font-weight: 500; font-size: .875rem; color: var(--muted); }
 .badge--link {
   color: var(--ink); text-decoration: none; cursor: pointer; font-family: inherit; line-height: inherit; text-align: left;
   transition: border-color .2s var(--ease), background-color .2s var(--ease);
@@ -815,7 +818,7 @@ html.sheet-open { overflow: hidden; }
         <div class="skill-groups" id="skill-groups">
           <div class="skill-group reveal" id="cert-wrap">
             <h3 class="minor-title">Certifications</h3>
-            <ul class="badges" id="cert-list"></ul>
+            <div class="cert-groups" id="cert-list"></div>
           </div>
         </div>
       </div>
@@ -1076,20 +1079,37 @@ window.PROFILE = {
     }
   },
 
-  certifications: [
-    { name: "AI Fluency: Framework & Foundations", issuer: "Anthropic", url: "https://verify.skilljar.com/c/v4uq76zhxzm8" },
-    { name: "Claude 101", issuer: "Anthropic", url: "https://verify.skilljar.com/c/oierwxszs6zq" },
-    { name: "National Lifeguard", issuer: "Lifesaving Society", proof: "lifesaving" },   // opens the record below
-    { name: "Standard First Aid with CPR-C", issuer: "Lifesaving Society", proof: "lifesaving" },
-    { name: "Lifesaving Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
-    { name: "Swim Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
-    { name: "Emergency First Aid Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
-    { name: "The Be There Certificate", issuer: "Born This Way Foundation",
-      proof: {
+  certifications: [                                // grouped; every one opens a preview in the side panel
+    { group: "First Aid & Safety", issuer: "Lifesaving Society", items: [
+      { name: "Standard First Aid with CPR-C", proof: "lifesaving" },
+      { name: "National Lifeguard", proof: "lifesaving" },
+      { name: "Emergency First Aid Instructor", proof: "lifesaving" },
+      { name: "Lifesaving Instructor", proof: "lifesaving" },
+      { name: "Swim Instructor", proof: "lifesaving" }
+    ] },
+    { group: "AI", issuer: "Anthropic", items: [
+      { name: "AI Fluency: Framework & Foundations", proof: {
+        lead: { src: "images/cert-ai-fluency.jpg", alt: "Anthropic certificate of completion for AI Fluency: Framework & Foundations, presented to Zidan Zuberi", fit: "contain" },
+        intro: "Certificate of completion from Anthropic, June 14, 2026.",
+        link: { heading: "Check it yourself", label: "Official credential page", url: "https://verify.skilljar.com/c/v4uq76zhxzm8" }
+      } },
+      { name: "Claude 101", proof: {
+        lead: { src: "images/cert-claude-101.jpg", alt: "Anthropic certificate of completion for Claude 101, presented to Zidan Zuberi", fit: "contain" },
+        intro: "Certificate of completion from Anthropic, June 2026.",
+        link: { heading: "Check it yourself", label: "Official credential page", url: "https://verify.skilljar.com/c/oierwxszs6zq" }
+      } }
+    ] },
+    { group: "Mental Health & Support", items: [
+      { name: "The Be There Certificate", issuer: "Born This Way Foundation", proof: {
         lead: { src: "images/be-there-certificate.jpg", alt: "Be There Certificate of completion presented to Zidan Zuberi, dated 07/29/2026", fit: "contain" },
         intro: "Online mental health training from Jack.org and Born This Way Foundation on Be There's 5 Golden Rules: how to recognize when someone may be struggling and help them get the support they need. Completed July 29, 2026."
       } },
-    { name: "Responding to Disclosures of Sexual Violence", issuer: "CREVAWC", url: "https://credsverse.com/credentials/23885e3d-8104-42d9-a4bd-6ed413720a8d" }
+      { name: "Responding to Disclosures of Sexual Violence", issuer: "CREVAWC", proof: {
+        lead: { src: "images/cert-rdsv.jpg", alt: "Certificate of participation in Responding to Disclosures of Sexual Violence on University and College Campuses in Ontario, presented to Zidan Zuberi, July 29, 2026", fit: "contain" },
+        intro: "Training on responding to disclosures of sexual violence on university and college campuses in Ontario, from Western University's Centre for Research & Education on Violence Against Women & Children (CREVAWC). Completed July 29, 2026.",
+        link: { heading: "Check it yourself", label: "Official credential page", url: "https://credsverse.com/credentials/23885e3d-8104-42d9-a4bd-6ed413720a8d" }
+      } }
+    ] }
   ],
 
   beyond: [
@@ -1408,19 +1428,24 @@ window.PROFILE = {
     });
 
     const cl = $('#cert-list');
-    list(P.certifications).forEach((c) => {
-      const text = [c.name, c.issuer].filter(Boolean).join(', ');
+    const badge = (c, issuer) => {
+      const who = c.issuer || '';
+      const text = [c.name, who].filter(Boolean).join(', ');
       const url = safeUrl(c.url);
       const proof = typeof c.proof === 'string' ? (P.proofs || {})[c.proof] : c.proof;
       if (proof) {
         const btn = h('button', { class: 'badge badge--cert badge--link', type: 'button', 'aria-haspopup': 'dialog' }, icon('star'), text, icon('panel'));
-        btn.addEventListener('click', () => openSheet({ eyebrow: 'Certification', title: c.name, sub: c.issuer, ...proof }));
-        cl.append(h('li', null, btn));
-      } else if (url) {
-        cl.append(h('li', null, h('a', { class: 'badge badge--cert badge--link', ...external(url), 'aria-label': `${text} (view credential)` }, icon('star'), text, icon('arrow'))));
-      } else {
-        cl.append(h('li', { class: 'badge badge--cert' }, icon('star'), text));
+        btn.addEventListener('click', () => openSheet({ eyebrow: 'Certification', title: c.name, sub: c.issuer || issuer, ...proof }));
+        return h('li', null, btn);
       }
+      if (url) return h('li', null, h('a', { class: 'badge badge--cert badge--link', ...external(url), 'aria-label': `${text} (view credential)` }, icon('star'), text, icon('arrow')));
+      return h('li', { class: 'badge badge--cert' }, icon('star'), text);
+    };
+    list(P.certifications).forEach((g) => {
+      cl.append(h('div', { class: 'cert-group' },
+        h('h4', { class: 'cert-group__title' }, g.group, g.issuer ? h('span', { class: 'cert-group__issuer', text: g.issuer }) : null),
+        h('ul', { class: 'badges' }, list(g.items).map((c) => badge(c, g.issuer)))
+      ));
     });
     certs.hidden = !list(P.certifications).length;
   }
