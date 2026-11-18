@@ -1062,17 +1062,28 @@ window.PROFILE = {
     { group: "Languages", items: ["English", "Urdu", "Hindi"] }
   ],
 
+  proofs: {                                          // records a certification can open in the side panel
+    lifesaving: {
+      lead: { src: "images/lifesaving-record.png", alt: "Zidan's Lifesaving Society record dated 2026-11-17, listing five current certifications" },
+      intro: "My official record from the Lifesaving Society's Find a Member page, dated November 17, 2026.",
+      fact: { label: "Verification code", text: "U7RP1Q-U1V162-V6RF2H", copy: true },
+      link: { heading: "Check it yourself", label: "Lifesaving Society Find a Member", url: "https://www.lifesavingsociety.com/find-a-member.aspx", note: "Paste the verification code into the box and press Get Certifications." }
+    }
+  },
+
   certifications: [
     { name: "AI Fluency: Framework & Foundations", issuer: "Anthropic", url: "https://verify.skilljar.com/c/v4uq76zhxzm8" },
     { name: "Claude 101", issuer: "Anthropic", url: "https://verify.skilljar.com/c/oierwxszs6zq" },
-    { name: "National Lifeguard", issuer: "Lifesaving Society",
-      proof: {                                       // opens the side panel instead of a link
-        lead: { src: "images/lifesaving-record.png", alt: "Zidan's Lifesaving Society record dated 2026-11-17, listing National Lifeguard and four other current certifications" },
-        intro: "My official record from the Lifesaving Society's Find a Member page, dated November 17, 2026.",
-        fact: { label: "Verification code", text: "U7RP1Q-U1V162-V6RF2H", copy: true },
-        link: { heading: "Check it yourself", label: "Lifesaving Society Find a Member", url: "https://www.lifesavingsociety.com/find-a-member.aspx", note: "Paste the verification code into the box and press Get Certifications." }
+    { name: "National Lifeguard", issuer: "Lifesaving Society", proof: "lifesaving" },   // opens the record below
+    { name: "Standard First Aid with CPR-C", issuer: "Lifesaving Society", proof: "lifesaving" },
+    { name: "Lifesaving Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
+    { name: "Swim Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
+    { name: "Emergency First Aid Instructor", issuer: "Lifesaving Society", proof: "lifesaving" },
+    { name: "The Be There Certificate", issuer: "Born This Way Foundation",
+      proof: {
+        lead: { src: "images/be-there-certificate.jpg", alt: "Be There Certificate of completion presented to Zidan Zuberi, dated 07/29/2026", fit: "contain" },
+        intro: "Online mental health training from Jack.org and Born This Way Foundation on Be There's 5 Golden Rules: how to recognize when someone may be struggling and help them get the support they need. Completed July 29, 2026."
       } },
-    { name: "The Be There Certificate", issuer: "Born This Way Foundation" },
     { name: "Responding to Disclosures of Sexual Violence", issuer: "CREVAWC", url: "https://credsverse.com/credentials/23885e3d-8104-42d9-a4bd-6ed413720a8d" }
   ],
 
@@ -1395,9 +1406,10 @@ window.PROFILE = {
     list(P.certifications).forEach((c) => {
       const text = [c.name, c.issuer].filter(Boolean).join(', ');
       const url = safeUrl(c.url);
-      if (c.proof) {
+      const proof = typeof c.proof === 'string' ? (P.proofs || {})[c.proof] : c.proof;
+      if (proof) {
         const btn = h('button', { class: 'badge badge--cert badge--link', type: 'button', 'aria-haspopup': 'dialog' }, icon('star'), text, icon('panel'));
-        btn.addEventListener('click', () => openSheet({ eyebrow: 'Certification', title: c.name, sub: c.issuer, ...c.proof }));
+        btn.addEventListener('click', () => openSheet({ eyebrow: 'Certification', title: c.name, sub: c.issuer, ...proof }));
         cl.append(h('li', null, btn));
       } else if (url) {
         cl.append(h('li', null, h('a', { class: 'badge badge--cert badge--link', ...external(url), 'aria-label': `${text} (view credential)` }, icon('star'), text, icon('arrow'))));
@@ -1675,6 +1687,7 @@ window.PROFILE = {
     if (!src) return null;
     const el = h('img', { src, alt: img.alt || '', decoding: 'async' });
     if (img.pos) el.style.objectPosition = img.pos;
+    if (img.fit === 'contain') el.style.objectFit = 'contain';
     return h('figure', { class: 'sheet__lead' }, el);
   }
 
