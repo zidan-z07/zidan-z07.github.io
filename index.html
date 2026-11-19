@@ -392,9 +392,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 [data-tilt] {
   --rx: 0deg; --ry: 0deg; --gx: 50%; --gy: 50%; --glare: 0;
   position: relative;
-  transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry));
-  transform-style: preserve-3d;
-  transition: transform .5s var(--ease), box-shadow .4s, border-color .3s;
+  transition: box-shadow .4s, border-color .3s;
 }
 [data-tilt].is-tilting {
   transition: transform .08s linear, box-shadow .4s, border-color .3s;
@@ -425,8 +423,8 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
     radial-gradient(100% 70% at 0% 100%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
     var(--surface);
 }
-.idcard__school { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -.03em; line-height: 1.05; transform: translateZ(30px); }
-.idcard__degree { font-weight: 500; line-height: 1.4; transform: translateZ(20px); }
+.idcard__school { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -.03em; line-height: 1.05; }
+.idcard__degree { font-weight: 500; line-height: 1.4; }
 .idcard__grad {
   margin-top: 6px; padding-top: 12px; border-top: 1px dashed var(--line);
   font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted);
@@ -541,7 +539,7 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
   display: flex; flex-direction: column; min-width: 0;
 }
 .card--featured { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-.card__media { position: relative; padding: 10px; display: grid; gap: 8px; align-content: start; transform: translateZ(34px); }
+.card__media { position: relative; padding: 10px; display: grid; gap: 8px; align-content: start; }
 .card__thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
 .card__status {
   font-family: var(--font-mono); font-size: var(--label); letter-spacing: .04em;
@@ -558,7 +556,7 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .photo img { width: 100%; height: 100%; object-fit: cover; }
 .card__thumbs .photo { aspect-ratio: 16 / 10; }
 
-.card__body { padding: 18px 24px 24px; display: grid; gap: 12px; transform: translateZ(22px); flex: 1; align-content: start; min-width: 0; }
+.card__body { padding: 18px 24px 24px; display: grid; gap: 12px; flex: 1; align-content: start; min-width: 0; }
 .card--featured .card__body { padding: 26px 28px 28px 18px; align-content: center; }
 .card--text .card__body { padding: 22px 24px 24px; }
 .card__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-family: var(--font-mono); font-size: var(--label); color: var(--muted); }
@@ -571,7 +569,7 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .card__desc { color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
 
 /* "Ask it a question": a question, the six tools, and the one the model calls */
-.ask { margin: 0; padding: 0 10px 10px; display: grid; gap: 10px; align-content: start; min-width: 0; transform: translateZ(28px); }
+.ask { margin: 0; padding: 0 10px 10px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .ask__in { display: grid; gap: 12px; padding: 18px; border-radius: var(--radius); background: var(--surface-2); min-width: 0; }
 .ask__label { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
 .ask__bubble {
@@ -1203,7 +1201,9 @@ window.PROFILE = {
       quote.textContent = `\u201C${qs[i].ask}\u201D`;
       cells.forEach((c) => c.classList.toggle('is-on', c.dataset.tool === qs[i].tool));
     };
-    show(0);
+    const order = tools.map((t) => qs.findIndex((q) => q.tool === t)).filter((n) => n >= 0);
+    const animate = qs.length > 1 && !reduceMotion && order.length > 1;
+    show(animate ? order[0] : 0);
     const chain = list(d.chain).flatMap((c, i) => [i ? h('span', { class: 'ask__arrow', text: '\u2192' }) : null, h('span', { text: c })]);
     const el = h('figure', { class: 'ask', 'aria-label': d.summary || null },
       h('div', { class: 'ask__in', 'aria-hidden': 'true' },
@@ -1216,15 +1216,15 @@ window.PROFILE = {
       d.note ? h('figcaption', { class: 'ask__note', text: d.note }) : null
     );
     // With motion allowed, the questions take turns and each lights up its own tool.
-    if (qs.length > 1 && !reduceMotion) {
-      let i = 0;
+    if (animate) {
+      let k = 0;
       setInterval(() => {
         if (document.hidden) return;
         bubble.classList.add('is-swapping');
         setTimeout(() => {
-          // jump to a different question at random, so every tool gets its turn
-          let n; do { n = Math.floor(Math.random() * qs.length); } while (n === i);
-          i = n; show(i); bubble.classList.remove('is-swapping');
+          // next box in reading order: left to right, top to bottom, then back to the start
+          k = (k + 1) % order.length;
+          show(order[k]); bubble.classList.remove('is-swapping');
         }, 260);
       }, 3200);
     }
