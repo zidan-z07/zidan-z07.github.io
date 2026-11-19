@@ -411,7 +411,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .about { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
 .goal {
   margin-top: 24px; padding: 18px 20px; display: grid; gap: 8px;
-  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); border-left: 2px solid var(--accent-2);
 }
 .goal__label { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
 .goal__text { color: var(--ink); }
@@ -437,38 +437,46 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   .idcard-wrap { max-width: 420px; }
 }
 
-/* ---------- Experience timeline ---------- */
-.timeline-wrap { position: relative; min-width: 0; }
+/* ---------- Experience timeline: open rows (date | line | role | picture) ---------- */
+.section__grid--stack { grid-template-columns: minmax(0, 1fr); gap: clamp(28px, 4vw, 48px); }
+.section__grid--stack .section__label { position: static; }
+.timeline-wrap { --dcol: 190px; --gap: 56px; position: relative; min-width: 0; }
 .timeline__track {
-  position: absolute; left: 9px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px;
+  position: absolute; left: calc(var(--dcol) + var(--gap) / 2 - 1px); top: 34px; bottom: 34px; width: 1px;
   background: var(--line); overflow: hidden;
 }
 .timeline__fill {
   position: absolute; inset: 0; transform-origin: 50% 0; transform: scaleY(1);
-  background: linear-gradient(var(--accent), var(--accent-2));
-  box-shadow: 0 0 14px var(--accent);
+  background: color-mix(in srgb, var(--accent-2) 70%, var(--line));
 }
-.timeline { display: grid; gap: 14px; min-width: 0; }
-.job { position: relative; padding-left: 44px; perspective: 1200px; }
+.timeline { display: grid; gap: 0; min-width: 0; }
+.job {
+  position: relative; display: grid; grid-template-columns: var(--dcol) minmax(0, 1fr);
+  column-gap: var(--gap); padding: 30px 0; align-items: start;
+}
+.job > * { transition: opacity .5s var(--ease); }
+.timeline.has-active > .job:not(.is-active) > :not(.job__dot) { opacity: .42; }
 .job__dot {
-  position: absolute; left: 1px; top: 30px; width: 18px; height: 18px; border-radius: 50%;
-  background: var(--bg); border: 2px solid var(--line); transition: border-color .4s, background-color .4s, box-shadow .4s;
+  position: absolute; left: calc(var(--dcol) + var(--gap) / 2 - 4.5px); top: 40px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--line); transition: background-color .4s;
 }
-.job.lit .job__dot { border-color: var(--accent-2); }
-.job--current .job__dot { border-color: var(--accent); }
-.job--current.lit .job__dot { background: var(--accent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), 0 0 22px var(--accent); }
-.job__card {
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: clamp(16px, 3vw, 26px); display: grid; gap: 10px; min-width: 0;
+.job.lit .job__dot { background: var(--accent-2); }
+.job__date { display: grid; gap: 4px; padding-top: 6px; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); line-height: 1.6; transition: color .45s var(--ease), opacity .5s var(--ease); }
+.job.is-active .job__date { color: var(--ink); }
+.job__date span { display: block; }
+.job__now {
+  justify-self: start; margin-bottom: 4px;
+  font-family: var(--font-mono); font-size: var(--label); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px;
 }
-.job__card { grid-template-columns: minmax(0, 1fr) clamp(150px, 30%, 220px); column-gap: clamp(16px, 3vw, 26px); align-items: start; }
+.job__card { display: grid; grid-template-columns: minmax(0, 1fr) 210px; column-gap: 32px; align-items: start; min-width: 0; }
 .job__body { display: grid; gap: 10px; min-width: 0; }
-.job__head { display: grid; gap: 8px; }
-/* One picture per job, on the right of the card. Jobs without a photo show their initials. */
+.job__titles { display: grid; gap: 4px; min-width: 0; }
+.job__role { font-family: var(--font-display); font-weight: 600; font-size: var(--step-1); letter-spacing: -.015em; line-height: 1.25; }
+.job__company { color: var(--ink); font-weight: 600; }
 .job__media {
   display: block; width: 100%; aspect-ratio: 4 / 3; margin: 0; padding: 0; border-radius: 14px; overflow: hidden;
-  background: var(--surface-2); border: 1px solid var(--line); color: var(--ink);
-  transform: translateZ(24px);
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
 }
 .job__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
 button.job__media { cursor: pointer; font: inherit; }
@@ -476,29 +484,27 @@ button.job__media { cursor: pointer; font: inherit; }
 button.job__media:hover img { transform: scale(1.04); }
 button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .job__media--mono {
-  display: grid; place-items: center;
+  display: grid; place-items: center; color: var(--muted);
   font-family: var(--font-display); font-weight: 800; font-size: clamp(1.6rem, 3.4vw, 2.3rem); letter-spacing: -.03em;
 }
-.job--current .job__media--mono { color: var(--accent); }
-.job__titles { display: grid; gap: 4px; min-width: 0; transform: translateZ(16px); }
-.job__role { font-family: var(--font-display); font-weight: 600; font-size: var(--step-1); letter-spacing: -.015em; line-height: 1.25; }
-.job__company { color: var(--accent); font-weight: 600; }
-.job__sub { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--muted); font-size: 1rem; }
-.job__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.job__now {
-  font-family: var(--font-mono); font-size: var(--label); letter-spacing: .12em; text-transform: uppercase;
-  color: var(--accent); border: 1px solid currentColor; border-radius: 99px; padding: 2px 8px;
-}
-.job__when { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); font-weight: 500; }
 .job__summary { max-width: 70ch; }
-.job__wins { display: grid; gap: 8px; }
-.job__wins li { position: relative; padding-left: 22px; max-width: 72ch; }
+.job__wins { display: grid; gap: 8px; color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
+.job__wins li { position: relative; padding-left: 18px; max-width: 72ch; }
 .job__wins li::before {
-  content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px;
-  border: 2px solid var(--accent); transform: rotate(45deg);
+  content: ""; position: absolute; left: 2px; top: .7em; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--muted);
+}
+@media (max-width: 860px) {
+  .timeline-wrap { --dcol: 150px; --gap: 40px; }
+  .job__card { grid-template-columns: minmax(0, 1fr) 170px; column-gap: 24px; }
 }
 @media (max-width: 640px) {
-  .job { padding-left: 34px; }
+  .timeline__track { left: 4px; top: 36px; bottom: 36px; }
+  .job { grid-template-columns: minmax(0, 1fr); row-gap: 12px; padding: 24px 0 24px 28px; }
+  .job__dot { left: 0; top: 34px; }
+  .job__date { padding-top: 0; display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: center; }
+  .job__date span { display: inline; }
+  .job__now { margin-bottom: 0; }
   .job__card { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
   .job__media { order: -1; aspect-ratio: 16 / 10; }
   .job__media--mono { display: none; }
@@ -517,13 +523,14 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .lead-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; min-width: 0; }
 .lead {
   border-radius: var(--radius); border: 1px solid var(--line); padding: 20px 22px; display: grid; gap: 6px; align-content: start;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--accent-2) 10%, var(--surface)), var(--surface) 55%);
+  background: var(--surface);
 }
 .lead__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
 .lead__title { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; letter-spacing: -.015em; line-height: 1.25; }
 .lead__badge { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 2px 10px; white-space: nowrap; }
-.lead__org { color: var(--accent); font-weight: 600; font-size: 1rem; }
-.lead__org a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.lead__org { color: var(--ink); font-weight: 600; font-size: 1rem; }
+.lead__org a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--muted); }
+.lead__org a:hover { text-decoration-color: var(--accent); }
 .lead__org a:hover { color: var(--ink); }
 .lead__dates { color: var(--muted); font-size: .95rem; margin-top: -4px; }
 
@@ -555,11 +562,11 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .card--featured .card__body { padding: 26px 28px 28px 18px; align-content: center; }
 .card--text .card__body { padding: 22px 24px 24px; }
 .card__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-family: var(--font-mono); font-size: var(--label); color: var(--muted); }
-.card__flag { color: var(--on-accent); background: var(--accent); border-radius: 99px; padding: 2px 9px; letter-spacing: .08em; text-transform: uppercase; font-size: var(--label); }
+.card__flag { color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 1px 9px; letter-spacing: .08em; text-transform: uppercase; font-size: var(--label); }
 .card__title { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; letter-spacing: -.015em; line-height: 1.25; }
 .card--featured .card__title { font-size: clamp(1.4rem, 2.6vw, 2rem); letter-spacing: -.03em; }
-.card__collab { font-weight: 600; color: var(--accent-2); font-size: 1rem; }
-.card__collab a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.card__collab { font-weight: 600; color: var(--ink); font-size: 1rem; }
+.card__collab a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--muted); }
 .card__collab a:hover { color: var(--ink); }
 .card__desc { color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
 
@@ -614,8 +621,7 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
   padding: 7px 12px; border-radius: 10px; font-weight: 500; font-size: 1rem;
   background: var(--surface); border: 1px solid var(--line);
 }
-.badge--cert { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
-.badge--cert svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
+.badge--cert svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
 .cert-groups { display: grid; gap: 18px; margin-top: 4px; }
 .cert-group__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; font-weight: 600; font-size: 1rem; color: var(--ink); }
 .cert-group__issuer { font-weight: 500; font-size: .875rem; color: var(--muted); }
@@ -735,9 +741,9 @@ html.sheet-open { overflow: hidden; }
     <div class="wrap nav__inner">
       <a class="nav__brand" href="#top" id="nav-brand" aria-label="ZZ. Back to top"></a>
       <nav class="nav__links" id="nav-links" aria-label="Sections">
-        <a href="#about" data-section="about">About</a>
-        <a href="#projects" data-section="projects">Projects</a>
         <a href="#experience" data-section="experience">Experience</a>
+        <a href="#projects" data-section="projects">Projects</a>
+        <a href="#about" data-section="about">About</a>
         <a href="#skills" data-section="skills">Skills</a>
         <a href="#contact" data-section="contact">Contact</a>
       </nav>
@@ -770,16 +776,22 @@ html.sheet-open { overflow: hidden; }
       </div>
     </section>
 
-    <!-- ABOUT -->
-    <section class="section" id="about" aria-labelledby="about-title">
-      <div class="wrap section__grid">
+    <!-- EXPERIENCE (with On campus) -->
+    <section class="section" id="experience" aria-labelledby="experience-title">
+      <div class="wrap section__grid section__grid--stack">
         <header class="section__label reveal">
-          <p class="kicker">About</p>
-          <h2 class="section__title" id="about-title">Student, builder, teacher</h2>
+          <p class="kicker">Experience</p>
+          <h2 class="section__title" id="experience-title">Where I've worked</h2>
         </header>
-        <div class="about">
-          <div class="prose reveal" id="about-body"></div>
-          <div class="idcard-wrap reveal" id="idcard-wrap"></div>
+        <div class="section__body">
+          <div class="timeline-wrap">
+            <span class="timeline__track" aria-hidden="true"><span class="timeline__fill" id="timeline-fill"></span></span>
+            <ol class="timeline" id="timeline"></ol>
+          </div>
+          <div id="oncampus">
+            <h3 class="subhead">On campus</h3>
+            <div class="lead-grid" id="oncampus-list"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -795,22 +807,16 @@ html.sheet-open { overflow: hidden; }
       </div>
     </section>
 
-    <!-- EXPERIENCE (with On campus) -->
-    <section class="section" id="experience" aria-labelledby="experience-title">
+    <!-- ABOUT -->
+    <section class="section" id="about" aria-labelledby="about-title">
       <div class="wrap section__grid">
         <header class="section__label reveal">
-          <p class="kicker">Experience</p>
-          <h2 class="section__title" id="experience-title">Where I've worked</h2>
+          <p class="kicker">About</p>
+          <h2 class="section__title" id="about-title">Student, builder, teacher</h2>
         </header>
-        <div class="section__body">
-          <div class="timeline-wrap">
-            <span class="timeline__track" aria-hidden="true"><span class="timeline__fill" id="timeline-fill"></span></span>
-            <ol class="timeline" id="timeline"></ol>
-          </div>
-          <div id="oncampus">
-            <h3 class="subhead">On campus</h3>
-            <div class="lead-grid" id="oncampus-list"></div>
-          </div>
+        <div class="about">
+          <div class="prose reveal" id="about-body"></div>
+          <div class="idcard-wrap reveal" id="idcard-wrap"></div>
         </div>
       </div>
     </section>
@@ -1352,19 +1358,18 @@ window.PROFILE = {
         press: e.press,
         tags: e.tags
       }) : null;
-      ol.append(h('li', { class: `job reveal${isCurrent ? ' job--current' : ''}` },
+      ol.append(h('li', { class: `job${isCurrent ? ' job--current' : ''}` },
         h('span', { class: 'job__dot', 'aria-hidden': 'true' }),
-        h('article', { class: 'job__card', 'data-tilt': 'soft' },
+        h('p', { class: 'job__date' },
+          isCurrent ? h('span', { class: 'job__now', text: 'Now' }) : null,
+          ...String(e.dates || '').split(' · ').filter(Boolean).map((t) => h('span', { text: t })),
+          e.location ? h('span', { text: e.location }) : null
+        ),
+        h('article', { class: 'job__card' },
          h('div', { class: 'job__body' },
-          h('div', { class: 'job__head' },
-            (isCurrent || e.dates) ? h('div', { class: 'job__meta' },
-              isCurrent ? h('span', { class: 'job__now', text: 'Now' }) : null,
-              e.dates ? h('p', { class: 'job__when', text: e.dates }) : null
-            ) : null,
-            h('div', { class: 'job__titles' },
-              h('h3', { class: 'job__role', text: e.role }),
-              h('p', { class: 'job__sub' }, h('span', { class: 'job__company', text: e.company }), e.location ? h('span', { text: e.location }) : null)
-            )
+          h('div', { class: 'job__titles' },
+            h('h3', { class: 'job__role', text: e.role }),
+            h('p', { class: 'job__company', text: e.company })
           ),
           e.summary ? h('p', { class: 'job__summary', text: e.summary }) : null,
           list(e.achievements).length ? h('ul', { class: 'job__wins' }, list(e.achievements).map((t) => h('li', { text: t }))) : null,
@@ -1463,12 +1468,12 @@ window.PROFILE = {
       const url = safeUrl(c.url);
       const proof = typeof c.proof === 'string' ? (P.proofs || {})[c.proof] : c.proof;
       if (proof) {
-        const btn = h('button', { class: 'badge badge--cert badge--link', type: 'button', 'aria-haspopup': 'dialog' }, icon('star'), text, icon('panel'));
+        const btn = h('button', { class: 'badge badge--cert badge--link', type: 'button', 'aria-haspopup': 'dialog' }, text, icon('panel'));
         btn.addEventListener('click', () => openSheet({ eyebrow: 'Certification', title: c.name, sub: c.issuer || issuer, ...proof }));
         return h('li', null, btn);
       }
-      if (url) return h('li', null, h('a', { class: 'badge badge--cert badge--link', ...external(url), 'aria-label': `${text} (view credential)` }, icon('star'), text, icon('arrow')));
-      return h('li', { class: 'badge badge--cert' }, icon('star'), text);
+      if (url) return h('li', null, h('a', { class: 'badge badge--cert badge--link', ...external(url), 'aria-label': `${text} (view credential)` }, text, icon('arrow')));
+      return h('li', { class: 'badge badge--cert' }, text);
     };
     list(P.certifications).forEach((g) => {
       cl.append(h('div', { class: 'cert-group' },
@@ -1522,6 +1527,7 @@ window.PROFILE = {
 
   /* ---------- 3D tilt (cards, ID card). data-tilt="soft" = gentler, for big cards ---------- */
   function initTilt() {
+    return;   // tilt turned off for a calmer, more professional look
     if (!finePointer || reduceMotion) return;
     $$('[data-tilt]').forEach((card) => {
       const k = card.dataset.tilt === 'soft' ? 0.4 : 1;
@@ -1588,6 +1594,13 @@ window.PROFILE = {
       const p = Math.max(0, Math.min(1, (line - r.top) / r.height));
       fill.style.transform = `scaleY(${p.toFixed(4)})`;
       jobs.forEach((j) => j.classList.toggle('lit', j.getBoundingClientRect().top + 30 < line));
+      if (!reduceMotion) {
+        const passed = jobs.filter((j) => j.getBoundingClientRect().top < line);
+        const active = passed.length ? passed[passed.length - 1] : jobs[0];
+        const inView = r.top < innerHeight && r.bottom > 0;
+        jobs.forEach((j) => j.classList.toggle('is-active', inView && j === active));
+        $('#timeline').classList.toggle('has-active', inView);
+      }
     };
     addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', update);
