@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; img-src 'self' data:; media-src 'self' blob:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Zidan Zuberi | Automotive Engineering Technology Student, McMaster University</title>
 <meta name="description" content="Second-year Automotive &amp; Vehicle Engineering Technology student at McMaster University, looking for a Summer 2027 co-op in project coordination in automotive and EV.">
 <link rel="canonical" href="https://zidanzuberi.com/">
@@ -907,7 +909,7 @@ window.PROFILE = {
       { label: "Based in", value: "Oakville, Ontario" },
       { label: "Studying", value: "BTech · McMaster '29" }
     ],
-    email: "zidan.zuberi@gmail.com",
+    emailParts: ["zidan.zuberi", "gmail.com"],     // your email, split in two so spam bots can't read it from the page source
     linkedin: "https://www.linkedin.com/in/zidan-zuberi"
   },
 
@@ -1174,6 +1176,7 @@ window.PROFILE = {
   'use strict';
 
   const P = window.PROFILE || {};
+  if (P.person && !P.person.email && Array.isArray(P.person.emailParts)) P.person.email = P.person.emailParts.join('@');
   const root = document.documentElement;
   const $ = (sel, scope = document) => scope.querySelector(sel);
   const $$ = (sel, scope = document) => Array.from(scope.querySelectorAll(sel));
