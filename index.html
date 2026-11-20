@@ -705,6 +705,25 @@ a.beyond-row:hover { background: var(--surface-2); }
 .beyond-row__go { width: 18px; height: 18px; color: var(--muted); transition: color .2s, transform .25s var(--ease); }
 .beyond-row__go svg { width: 18px; height: 18px; display: block; }
 a.beyond-row:hover .beyond-row__go { color: var(--accent); transform: translate(2px, -2px); }
+/* Daily driver: a portrait clip on the right that plays on hover */
+.beyond-row--clip { transition: background-color .2s; }
+.beyond-row--clip:hover { background: var(--surface-2); }
+.beyond-clip {
+  position: relative; display: block; width: 126px; aspect-ratio: 3 / 4; padding: 0; margin: 2px 0; overflow: hidden; cursor: pointer;
+  border-radius: 12px; border: 1px solid var(--line); background: #0b1516; font: inherit; color: #fff;
+  transition: transform .35s var(--ease), border-color .25s, box-shadow .35s var(--ease);
+}
+.beyond-clip__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; display: block; pointer-events: none; }
+.beyond-clip__hint {
+  position: absolute; left: 5px; right: 5px; bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 3px 4px; border-radius: 99px; background: rgba(5, 10, 11, .62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  font-family: var(--font-mono); font-size: .6rem; letter-spacing: 0; white-space: nowrap; transition: opacity .25s;
+}
+.beyond-clip__hint svg { width: 10px; height: 10px; flex: none; }
+.beyond-clip.is-playing { border-color: var(--accent); transform: scale(1.04); box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .7); }
+.beyond-clip.is-playing .beyond-clip__hint { opacity: 0; }
+.beyond-clip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 480px) { .beyond-clip { width: 104px; } }
 
 /* ---------- Contact ---------- */
 .contact { position: relative; overflow: hidden; }
@@ -1365,7 +1384,8 @@ window.PROFILE = {
   beyond: [
     { kind: "youtube",  label: "ZIZUBerry Gameplay", text: "monetized YouTube gaming channel, 16k subscribers and 8M+ views", url: "https://www.youtube.com/@ZIZUBerry" },
     { kind: "linkedin", label: "LinkedIn",         text: "I post what I'm building, about 4k followers",     url: "https://www.linkedin.com/in/zidan-zuberi" },
-    { kind: "car",      label: "Daily driver",     text: "2013 Ford Fusion Sport. It has taught me more about car problems than I ever wanted to know.", url: "" }
+    { kind: "car",      label: "Daily driver",     text: "2013 Ford Fusion Sport. It has taught me more about car problems than I ever wanted to know.", url: "",
+      video: { src: "images/fusion.mp4", poster: "images/fusion-poster.jpg", alt: "Short clip of my black 2013 Ford Fusion at sunset" } }   // plays while you hover over the row
   ],
 
   contact: {
@@ -1721,6 +1741,23 @@ window.PROFILE = {
         h('span', null, h('b', { text: b.label }), `: ${b.text}`),
         href ? h('span', { class: 'beyond-row__go', 'aria-hidden': 'true' }, icon('arrow')) : null
       ];
+      if (b.video && safeUrl(b.video.src)) {
+        // a small clip that plays in place while you hover (tap on phones), and rewinds when you leave
+        const vid = h('video', { class: 'beyond-clip__video', src: safeUrl(b.video.src), poster: safeUrl(b.video.poster) || null, muted: '', loop: '', playsinline: '', preload: 'metadata', 'aria-hidden': 'true', tabindex: '-1', disablepictureinpicture: '', disableremoteplayback: '' });
+        vid.muted = true;
+        const tile = h('button', { class: 'beyond-clip', type: 'button', 'aria-label': `${b.video.alt || b.label}. Play the clip`, 'aria-pressed': 'false' },
+          vid,
+          h('span', { class: 'beyond-clip__hint', 'aria-hidden': 'true' }));
+        tile.querySelector('.beyond-clip__hint').innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>' + (finePointer ? 'Hover to play' : 'Tap to play');
+        const play = () => { const pr = vid.play(); if (pr && pr.catch) pr.catch(() => {}); tile.classList.add('is-playing'); tile.setAttribute('aria-pressed', 'true'); };
+        const stop = () => { vid.pause(); vid.currentTime = 0; tile.classList.remove('is-playing'); tile.setAttribute('aria-pressed', 'false'); };
+        const row = h('div', { class: 'beyond-row beyond-row--clip' }, ...inner, tile);
+        if (finePointer) { row.addEventListener('pointerenter', play); row.addEventListener('pointerleave', stop); }
+        tile.addEventListener('click', () => (tile.classList.contains('is-playing') ? stop() : play()));
+        tile.addEventListener('blur', () => { if (!finePointer) stop(); });
+        ul.append(h('li', null, row));
+        return;
+      }
       ul.append(h('li', null, href ? h('a', { class: 'beyond-row', ...external(href) }, inner) : h('div', { class: 'beyond-row' }, inner)));
     });
     $('#beyond').hidden = !list(P.beyond).length;
