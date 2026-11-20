@@ -627,6 +627,39 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
   .card--featured .card__body { padding: 16px 22px 22px; }
 }
 
+/* ---------- Under the Hood promo (links to the interactive coursework page) ---------- */
+.promo {
+  --pad: clamp(24px, 4vw, 44px);
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 24px; align-items: center;
+  overflow: hidden; border-radius: 28px; padding: var(--pad); color: var(--ink); text-decoration: none;
+  background: radial-gradient(70% 90% at 82% 45%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%), var(--surface);
+  border: 1px solid var(--line); transition: border-color .3s var(--ease);
+}
+.promo:hover { border-color: color-mix(in srgb, var(--accent-2) 60%, var(--line)); }
+.promo:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.promo__copy { position: relative; z-index: 1; display: grid; gap: 10px; justify-items: start; }
+.promo__kicker { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
+.promo__title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.2rem, 5vw, 3.6rem); letter-spacing: -.045em; line-height: 1; }
+.promo__sub { color: var(--muted); font-size: 1.1rem; }
+.promo__stat { margin-top: 6px; font-family: var(--font-display); font-weight: 700; font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.03em; color: var(--accent); }
+.promo__note { color: var(--muted); font-size: .95rem; }
+.promo__btn { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 99px; background: var(--ink); color: var(--bg); font-weight: 600; transition: background-color .25s, color .25s; }
+.promo__btn svg { width: 16px; height: 16px; transition: transform .25s var(--ease); }
+.promo:hover .promo__btn { background: var(--accent); color: var(--on-accent); }
+.promo:hover .promo__btn svg { transform: translateX(3px); }
+.promo__art { position: relative; align-self: stretch; min-height: 320px; margin: calc(-1 * var(--pad)) calc(-1 * var(--pad)) calc(-1 * var(--pad)) 0; }
+.promo__img { position: absolute; display: block; border-radius: 22px; border: 6px solid #0b1516; object-fit: cover; box-shadow: 0 30px 60px -22px rgba(0, 0, 0, .65); transition: transform .6s var(--ease); }
+.promo__img--a { width: 62%; height: auto; aspect-ratio: 640 / 753; left: 2%; top: 24%; transform: rotate(-6deg); }
+.promo__img--b { width: 58%; height: auto; aspect-ratio: 1; right: -6%; top: 44%; transform: rotate(5deg); }
+.promo:hover .promo__img--a { transform: rotate(-8deg) translateY(-8px); }
+.promo:hover .promo__img--b { transform: rotate(7deg) translateY(-8px); }
+@media (max-width: 760px) {
+  .promo { grid-template-columns: minmax(0, 1fr); }
+  .promo__art { min-height: 250px; margin: 0 calc(-1 * var(--pad)) calc(-1 * var(--pad)); }
+  .promo__img--a { width: 48%; left: 6%; top: 10%; }
+  .promo__img--b { width: 46%; right: 4%; top: 22%; }
+}
+
 /* ---------- Skills ---------- */
 .skill-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 22px 24px; min-width: 0; }
 .skill-group { display: grid; gap: 10px; align-content: start; }
@@ -969,10 +1002,26 @@ kbd {
           <p class="kicker">Skills</p>
           <h2 class="section__title" id="skills-title">Toolkit</h2>
         </header>
-        <div class="skill-groups" id="skill-groups">
-          <div class="skill-group reveal" id="cert-wrap">
-            <h3 class="minor-title">Certifications</h3>
-            <div class="cert-groups" id="cert-list"></div>
+        <div class="section__body">
+          <a class="promo reveal" href="/under-the-hood">
+            <div class="promo__copy">
+              <p class="promo__kicker">Interactive · SolidWorks coursework</p>
+              <h3 class="promo__title">Under the Hood</h3>
+              <p class="promo__sub">My CAD coursework as a car you can open.</p>
+              <p class="promo__stat">2 SolidWorks models</p>
+              <p class="promo__note">Pop the hood, click a glowing part and spin the model.</p>
+              <span class="promo__btn">Pop the hood <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="promo__art" aria-hidden="true">
+              <img class="promo__img promo__img--a" src="images/uth-hood.jpg" alt="" loading="lazy" decoding="async" width="640" height="753">
+              <img class="promo__img promo__img--b" src="images/uth-hub.jpg" alt="" loading="lazy" decoding="async" width="640" height="640">
+            </div>
+          </a>
+          <div class="skill-groups" id="skill-groups">
+            <div class="skill-group reveal" id="cert-wrap">
+              <h3 class="minor-title">Certifications</h3>
+              <div class="cert-groups" id="cert-list"></div>
+            </div>
           </div>
         </div>
       </div>

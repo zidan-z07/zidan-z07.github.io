@@ -5,9 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="robots" content="noindex">
+<link rel="canonical" href="https://zidanzuberi.com/under-the-hood">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://zidanzuberi.com/under-the-hood">
+<meta property="og:title" content="Under the Hood | Zidan Zuberi">
+<meta property="og:description" content="My SolidWorks coursework as an interactive car. Pop the hood and click the parts.">
+<meta property="og:image" content="https://zidanzuberi.com/images/uth-hood.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <title>Under the Hood | Zidan Zuberi</title>
-<meta name="description" content="Zidan Zuberi's coursework, shown as the parts of a car. Work in progress.">
+<meta name="description" content="Zidan Zuberi's SolidWorks coursework as an interactive car: pop the hood and click the parts to see the 3D models.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.png" type="image/png" sizes="192x192">
 <meta name="theme-color" content="#091112">
@@ -118,11 +124,14 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 .part .detail { fill: none; stroke: rgba(99, 209, 200, .4); stroke-width: 1.3; stroke-linecap: round; transition: stroke .25s; }
 .part .label { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); text-anchor: middle; opacity: 0; transition: opacity .25s; pointer-events: none; }
 .bay-off .part { pointer-events: none; }
-.is-alive .part .shape { stroke: var(--accent-2); animation: breathe 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.part:not(.cad) { pointer-events: none; cursor: default; }
+.is-alive .part:not(.cad) .shape { stroke: rgba(99, 209, 200, .32); }
+.is-alive .part:not(.cad) .detail { stroke: rgba(99, 209, 200, .22); }
+.is-alive .part.cad .shape { stroke: var(--accent-2); animation: breathe 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes breathe { 50% { fill: rgba(99, 209, 200, .1); } }
-.is-alive .part:hover .shape, .is-alive .part:focus-visible .shape, .is-alive .part.on .shape { stroke: var(--accent); fill: rgba(255, 138, 76, .14); animation: none; filter: url(#glow); }
-.is-alive .part:hover .detail, .is-alive .part:focus-visible .detail, .is-alive .part.on .detail { stroke: var(--accent); }
-.is-alive .part:hover .label, .is-alive .part:focus-visible .label, .is-alive .part.on .label { opacity: 1; fill: var(--ink); }
+.is-alive .part.cad:hover .shape, .is-alive .part.cad:focus-visible .shape, .is-alive .part.cad.on .shape { stroke: var(--accent); fill: rgba(255, 138, 76, .14); animation: none; filter: url(#glow); }
+.is-alive .part.cad:hover .detail, .is-alive .part.cad:focus-visible .detail, .is-alive .part.cad.on .detail { stroke: var(--accent); }
+.is-alive .part.cad:hover .label, .is-alive .part.cad:focus-visible .label, .is-alive .part.cad.on .label { opacity: 1; fill: var(--ink); }
 .part:focus-visible { outline: none; }
 .draw .shape, .draw .detail { stroke-dasharray: var(--len, 1200); stroke-dashoffset: var(--len, 1200); animation: draw 1.1s var(--ease) forwards; animation-delay: var(--d, 0s); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
@@ -168,13 +177,13 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="./" aria-label="ZZ. Back to the portfolio">zz<span>.</span></a>
-  <a class="back" href="./">Back to portfolio</a>
+  <a class="brand" href="/" aria-label="ZZ. Back to the portfolio">zz<span>.</span></a>
+  <a class="back" href="/">Back to portfolio</a>
 </header>
 
 <main>
   <div class="head">
-    <p class="pill">Work in progress</p>
+    <p class="pill">SolidWorks coursework</p>
     <h1>Under the Hood</h1>
     <p class="sub">My coursework, shown as the parts of a car. Pop the hood to look inside.</p>
   </div>
@@ -327,10 +336,10 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   </div>
 
   <section class="list" aria-labelledby="parts-title">
-    <h2 id="parts-title">Parts in the bay</h2>
+    <h2 id="parts-title">Parts with my models</h2>
     <ul id="parts-list"></ul>
   </section>
-  <p class="note">Each part will open the coursework behind it, with my CAD models where I have them. I'm adding them one at a time.</p>
+  <p class="note">The other parts light up as I finish more of my courses.</p>
 </main>
 
 <script>
@@ -344,7 +353,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   let released = 0, stage = 'closed';
 
   // plain list under the scene, for skimming and screen readers
-  [...new Set(parts.map((p) => p.dataset.name + (p.dataset.model ? ' (CAD model)' : '')))].forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('#parts-list').append(li); });
+  [...new Set(parts.filter((p) => p.dataset.model).map((p) => p.dataset.name))].forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('#parts-list').append(li); });
 
   // stroke lengths so each part can "draw itself" when the bay comes alive
   parts.forEach((p) => p.querySelectorAll('.shape, .detail').forEach((el) => {
@@ -395,9 +404,9 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
         stage = 'alive';
         bay.classList.remove('bay-off'); bay.classList.add('draw');
         scene.classList.add('is-alive');
-        parts.forEach((p) => p.setAttribute('tabindex', '0'));
+        parts.forEach((p) => { if (p.dataset.model) p.setAttribute('tabindex', '0'); });
         setTimeout(() => bay.classList.remove('draw'), reduce ? 0 : 2400);
-        setHint('Hover a part to light it up. Parts with an <b>orange dot</b> open my CAD models.');
+        setHint('Click a part with an <b>orange dot</b> to open my CAD model.');
       });
     }, reduce ? 0 : 900);
   }
@@ -407,7 +416,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   // hover readout (and tap on phones)
   const name = $('#readout-name');
   parts.forEach((p) => {
-    const on = () => { if (stage !== 'alive') return; parts.forEach((q) => q.classList.toggle('on', q === p)); name.textContent = p.dataset.name + (p.dataset.model ? ': click to open' : ''); };
+    const on = () => { if (stage !== 'alive' || !p.dataset.model) return; parts.forEach((q) => q.classList.toggle('on', q === p)); name.textContent = p.dataset.name + (p.dataset.model ? ': click to open' : ''); };
     const off = () => { p.classList.remove('on'); name.textContent = 'Hover a part'; };
     p.addEventListener('pointerenter', on); p.addEventListener('pointerleave', off);
     p.addEventListener('focus', on); p.addEventListener('blur', off);
