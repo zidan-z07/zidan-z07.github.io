@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex">
+<title>Under the Hood | Zidan Zuberi</title>
+<meta name="description" content="Zidan Zuberi's coursework, shown as the parts of a car. Work in progress.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png" sizes="192x192">
+<meta name="theme-color" content="#091112">
+<link rel="preload" as="font" type="font/woff2" href="fonts/unbounded-400-800.woff2" crossorigin>
+<style>
+@font-face { font-family: "Hanken Grotesk"; font-style: normal; font-weight: 400 600; font-display: swap; src: url("fonts/hanken-grotesk-400-600.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400 500; font-display: swap; src: url("fonts/jetbrains-mono-400-500.woff2") format("woff2"); }
+@font-face { font-family: "Unbounded"; font-style: normal; font-weight: 400 800; font-display: swap; src: url("fonts/unbounded-400-800.woff2") format("woff2"); }
+
+:root {
+  --bg: #091112; --surface: #0f1b1d; --surface-2: #16262a; --ink: #e3ebe9; --muted: #8fa4a5;
+  --line: #22363a; --accent: #ff8a4c; --accent-2: #63d1c8; --on-accent: #1a0c04;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line); }
+.brand { font-family: var(--font-display); font-weight: 800; text-decoration: none; letter-spacing: -.04em; font-size: 1.15rem; }
+.brand span { color: var(--accent); }
+.back { font-size: .95rem; color: var(--muted); text-decoration: none; padding: 8px 12px; border-radius: 99px; border: 1px solid var(--line); }
+.back:hover { color: var(--ink); border-color: var(--muted); }
+
+main { width: min(100% - 32px, 1100px); margin: 0 auto; padding: clamp(28px, 5vw, 56px) 0 64px; display: grid; gap: 22px; }
+.head { display: grid; gap: 10px; justify-items: start; }
+.pill { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 2px 10px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: -.04em; line-height: 1.02; }
+.sub { color: var(--muted); max-width: 56ch; }
+
+/* ---------- the scene ---------- */
+.scene { position: relative; border: 1px solid var(--line); border-radius: 22px; overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 50% 55%, rgba(99, 209, 200, .08), transparent 70%),
+    linear-gradient(rgba(99, 209, 200, .05) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgba(99, 209, 200, .05) 1px, transparent 1px) 0 0 / 28px 28px,
+    #071012; }
+.scene svg { display: block; width: 100%; height: min(78vh, 760px); }
+
+.hud { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 14px 16px; pointer-events: none; }
+.hint { font-family: var(--font-mono); font-size: .85rem; color: var(--ink); background: rgba(7, 16, 18, .78); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; backdrop-filter: blur(6px); max-width: 34ch; }
+.hint b { color: var(--accent); font-weight: 500; }
+.readout { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); background: rgba(7, 16, 18, .78); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; min-width: 15ch; text-align: right; opacity: 0; transition: opacity .4s; }
+.readout strong { display: block; color: var(--accent); font-weight: 500; font-size: .95rem; }
+.is-alive .readout { opacity: 1; }
+
+.bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px;
+  background: linear-gradient(to top, rgba(7, 16, 18, .92), rgba(7, 16, 18, 0)); opacity: 0; transform: translateY(10px); transition: opacity .5s, transform .5s var(--ease); pointer-events: none; }
+.is-alive .bar { opacity: 1; transform: none; pointer-events: auto; }
+.range { display: flex; align-items: center; gap: 10px; flex: 1 1 200px; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.range input { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.btn { font-family: var(--font-mono); font-size: .8rem; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.btn:hover { border-color: var(--ink); }
+
+/* line art */
+.art { fill: none; stroke: var(--accent-2); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.art.dim { stroke: rgba(99, 209, 200, .45); stroke-width: 1.5; }
+.body-fill { fill: rgba(15, 27, 29, .9); }
+.glow { filter: url(#glow); }
+
+/* hood */
+.hood { cursor: default; transform-box: fill-box; transform-origin: 50% 0%; transition: transform .45s var(--ease), opacity .6s; }
+.hood .panel { fill: #0d1a1c; stroke: var(--accent-2); stroke-width: 2.2; }
+.hood .crease { fill: none; stroke: rgba(99, 209, 200, .35); stroke-width: 1.4; }
+.hood .word { font-family: var(--font-display); font-weight: 700; font-size: 34px; letter-spacing: -1px; fill: var(--ink); text-anchor: middle; }
+.hood .word2 { font-family: var(--font-mono); font-size: 13px; letter-spacing: 3px; fill: var(--muted); text-anchor: middle; }
+.is-popped .hood { transform: translateY(-5px) scale(1.012); cursor: pointer; }
+.is-popped .hood .panel { stroke: var(--accent); }
+.is-popped .hood:hover .panel, .is-popped .hood:focus-visible .panel { fill: #132427; }
+.hood:focus, .latch:focus, .part:focus { outline: none; }
+.is-opening .hood { animation: lift 1s var(--ease) forwards; cursor: default; }
+@keyframes lift {
+  0% { transform: translateY(-5px) scale(1.012, 1); }
+  45% { transform: translateY(-5px) scale(1.12, .04); }
+  100% { transform: translateY(-5px) scale(1.06, -.34); }
+}
+.is-opening .hood text, .is-opening .hood .crease { opacity: 0; transition: opacity .25s; }
+.is-zoomed .hood { opacity: 0; pointer-events: none; }
+.gap-shadow { fill: rgba(0, 0, 0, .55); opacity: 0; transition: opacity .4s; }
+.is-popped .gap-shadow { opacity: 1; }
+
+/* latches (the two hood catches) */
+.latch { cursor: pointer; }
+.latch .ring { fill: rgba(255, 138, 76, .12); stroke: var(--accent); stroke-width: 2; }
+.latch .x { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.latch .lever { fill: var(--accent); transform-box: fill-box; transform-origin: 50% 85%; transition: transform .35s var(--ease); }
+.latch .tick { fill: none; stroke: var(--accent-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.latch .pulse { fill: none; stroke: var(--accent); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ping 1.6s ease-out infinite; }
+@keyframes ping { from { transform: scale(.7); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
+.latch:hover .ring, .latch:focus-visible .ring { fill: rgba(255, 138, 76, .25); }
+.latch:focus-visible { outline: none; }
+.latch.done { cursor: default; }
+.latch.done .x, .latch.done .pulse { opacity: 0; animation: none; }
+.latch.done .ring { stroke: var(--accent-2); fill: rgba(99, 209, 200, .12); }
+.latch.done .lever { fill: var(--accent-2); transform: rotate(-70deg); }
+.latch.done .tick { opacity: 1; }
+.is-opening .latch, .is-zoomed .latch { opacity: 0; pointer-events: none; transition: opacity .4s; }
+
+/* engine bay parts */
+.part { cursor: pointer; transition: transform .5s var(--ease); }
+.part .shape { fill: rgba(99, 209, 200, .04); stroke: rgba(99, 209, 200, .55); stroke-width: 1.8; stroke-linejoin: round; transition: stroke .25s, fill .25s; }
+.part .detail { fill: none; stroke: rgba(99, 209, 200, .4); stroke-width: 1.3; stroke-linecap: round; transition: stroke .25s; }
+.part .label { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); text-anchor: middle; opacity: 0; transition: opacity .25s; pointer-events: none; }
+.bay-off .part { pointer-events: none; }
+.is-alive .part .shape { stroke: var(--accent-2); animation: breathe 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes breathe { 50% { fill: rgba(99, 209, 200, .1); } }
+.is-alive .part:hover .shape, .is-alive .part:focus-visible .shape, .is-alive .part.on .shape { stroke: var(--accent); fill: rgba(255, 138, 76, .14); animation: none; filter: url(#glow); }
+.is-alive .part:hover .detail, .is-alive .part:focus-visible .detail, .is-alive .part.on .detail { stroke: var(--accent); }
+.is-alive .part:hover .label, .is-alive .part:focus-visible .label, .is-alive .part.on .label { opacity: 1; fill: var(--ink); }
+.part:focus-visible { outline: none; }
+.draw .shape, .draw .detail { stroke-dasharray: var(--len, 1200); stroke-dashoffset: var(--len, 1200); animation: draw 1.1s var(--ease) forwards; animation-delay: var(--d, 0s); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.list { display: grid; gap: 6px; }
+.list h2 { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.list ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.list li { font-size: .95rem; padding: 6px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.note { color: var(--muted); font-size: .95rem; }
+
+@media (max-width: 640px) {
+  .scene svg { height: 70vh; }
+  .hint { font-size: .78rem; }
+  .readout { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-delay: 0s !important; transition-duration: .001s !important; }
+  .latch .pulse { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./" aria-label="ZZ. Back to the portfolio">zz<span>.</span></a>
+  <a class="back" href="./">Back to portfolio</a>
+</header>
+
+<main>
+  <div class="head">
+    <p class="pill">Work in progress</p>
+    <h1>Under the Hood</h1>
+    <p class="sub">My coursework, shown as the parts of a car. Pop the hood to look inside.</p>
+  </div>
+
+  <div class="scene" id="scene">
+    <svg id="svg" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Top view of the front of a car. Release the two hood catches, then lift the hood.">
+      <defs>
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- car body: windshield at the top, front bumper at the bottom -->
+      <g class="glow">
+        <path class="body-fill" d="M120 40 L480 40 L520 150 L530 640 Q530 760 420 770 L180 770 Q70 760 70 640 L80 150 Z"/>
+        <path class="art" d="M120 40 L480 40 L520 150 L530 640 Q530 760 420 770 L180 770 Q70 760 70 640 L80 150 Z"/>
+        <path class="art dim" d="M140 40 L170 128 L430 128 L460 40"/>
+        <!-- wheels peeking out at the sides -->
+        <rect class="art" x="48" y="210" width="26" height="120" rx="8"/>
+        <rect class="art" x="526" y="210" width="26" height="120" rx="8"/>
+        <!-- headlights and grille -->
+        <path class="art" d="M96 660 Q100 720 160 738 L188 700 Q130 690 112 650 Z"/>
+        <path class="art" d="M504 660 Q500 720 440 738 L412 700 Q470 690 488 650 Z"/>
+        <path class="art dim" d="M210 742 L390 742 M222 754 L378 754"/>
+      </g>
+
+      <!-- the engine bay (under the hood) -->
+      <g id="bay" class="bay-off">
+        <path class="art dim" d="M118 146 L482 146 L488 690 L112 690 Z"/>
+        <g class="part" data-name="Engine" tabindex="-1" role="button" aria-label="Engine (coursework coming soon)" style="--d:.15s">
+          <rect class="shape" x="220" y="300" width="160" height="220" rx="14"/>
+          <path class="detail" d="M240 330 L360 330 M240 490 L360 490"/>
+          <circle class="detail" cx="300" cy="360" r="15"/><circle class="detail" cx="300" cy="400" r="15"/>
+          <circle class="detail" cx="300" cy="440" r="15"/><circle class="detail" cx="300" cy="480" r="9"/>
+          <text class="label" x="300" y="290">ENGINE</text>
+        </g>
+        <g class="part" data-name="Radiator" tabindex="-1" role="button" aria-label="Radiator (coursework coming soon)" style="--d:.3s">
+          <rect class="shape" x="150" y="608" width="300" height="44" rx="6"/>
+          <path class="detail" d="M175 614 V646 M200 614 V646 M225 614 V646 M250 614 V646 M275 614 V646 M300 614 V646 M325 614 V646 M350 614 V646 M375 614 V646 M400 614 V646 M425 614 V646"/>
+          <text class="label" x="300" y="600">RADIATOR</text>
+        </g>
+        <g class="part" data-name="Air filter" tabindex="-1" role="button" aria-label="Air filter (coursework coming soon)" style="--d:.45s">
+          <rect class="shape" x="138" y="300" width="70" height="118" rx="16"/>
+          <path class="detail" d="M208 360 Q216 360 220 370 M150 330 H196 M150 350 H196 M150 370 H196 M150 390 H196"/>
+          <text class="label" x="173" y="290">AIR FILTER</text>
+        </g>
+        <g class="part" data-name="Battery" tabindex="-1" role="button" aria-label="Battery (coursework coming soon)" style="--d:.6s">
+          <rect class="shape" x="392" y="196" width="76" height="96" rx="8"/>
+          <path class="detail" d="M410 214 H426 M418 206 V222 M440 214 H456"/>
+          <path class="detail" d="M404 238 H456 M404 256 H456 M404 274 H456"/>
+          <text class="label" x="430" y="186">BATTERY</text>
+        </g>
+        <g class="part" data-name="Fuse box" tabindex="-1" role="button" aria-label="Fuse box (coursework coming soon)" style="--d:.75s">
+          <rect class="shape" x="400" y="318" width="64" height="96" rx="8"/>
+          <path class="detail" d="M414 336 H450 M414 352 H450 M414 368 H450 M414 384 H450 M414 400 H450"/>
+          <text class="label" x="432" y="430">FUSE BOX</text>
+        </g>
+        <g class="part" data-name="Coolant tank" tabindex="-1" role="button" aria-label="Coolant tank (coursework coming soon)" style="--d:.9s">
+          <rect class="shape" x="402" y="456" width="60" height="90" rx="22"/>
+          <circle class="detail" cx="432" cy="476" r="9"/>
+          <path class="detail" d="M414 514 H450 M414 528 H440"/>
+          <text class="label" x="432" y="562">COOLANT</text>
+        </g>
+        <g class="part" data-name="Brake fluid" tabindex="-1" role="button" aria-label="Brake fluid reservoir (coursework coming soon)" style="--d:1.05s">
+          <circle class="shape" cx="176" cy="206" r="30"/>
+          <circle class="detail" cx="176" cy="206" r="12"/>
+          <text class="label" x="176" y="258">BRAKE FLUID</text>
+        </g>
+        <g class="part" data-name="Washer fluid" tabindex="-1" role="button" aria-label="Washer fluid tank (coursework coming soon)" style="--d:1.2s">
+          <rect class="shape" x="138" y="452" width="62" height="100" rx="12"/>
+          <circle class="detail" cx="169" cy="472" r="8"/>
+          <text class="label" x="169" y="568">WASHER</text>
+        </g>
+      </g>
+
+      <!-- shadow line that appears when the hood pops -->
+      <path class="gap-shadow" d="M116 690 Q300 706 484 690 L484 698 Q300 714 116 698 Z"/>
+
+      <!-- the hood -->
+      <g class="hood" id="hood" role="button" tabindex="-1" aria-label="Lift the hood" aria-disabled="true">
+        <path class="panel" d="M114 144 L486 144 L492 640 Q490 700 300 704 Q110 700 108 640 Z"/>
+        <path class="crease" d="M200 160 Q190 420 214 660 M400 160 Q410 420 386 660"/>
+        <text class="word2" x="300" y="372">MY COURSEWORK</text>
+        <text class="word" x="300" y="420">UNDER</text>
+        <text class="word" x="300" y="462">THE HOOD</text>
+      </g>
+
+      <!-- the two hood catches -->
+      <g class="latch" id="latch-l" role="button" tabindex="0" aria-label="Release the left hood catch">
+        <circle class="pulse" cx="210" cy="724" r="18"/>
+        <circle class="ring" cx="210" cy="724" r="18"/>
+        <path class="x" d="M203 717 L217 731 M217 717 L203 731"/>
+        <rect class="lever" x="207" y="700" width="6" height="16" rx="3"/>
+        <path class="tick" d="M202 724 L208 730 L219 717"/>
+      </g>
+      <g class="latch" id="latch-r" role="button" tabindex="0" aria-label="Release the right hood catch">
+        <circle class="pulse" cx="390" cy="724" r="18"/>
+        <circle class="ring" cx="390" cy="724" r="18"/>
+        <path class="x" d="M383 717 L397 731 M397 717 L383 731"/>
+        <rect class="lever" x="387" y="700" width="6" height="16" rx="3"/>
+        <path class="tick" d="M382 724 L388 730 L399 717"/>
+      </g>
+    </svg>
+
+    <div class="hud">
+      <p class="hint" id="hint" aria-live="polite">Click both <b>X</b> marks to release the hood catches.</p>
+      <p class="readout" id="readout">Part<strong id="readout-name">Hover a part</strong></p>
+    </div>
+
+    <div class="bar">
+      <label class="range">Pull apart <input type="range" id="explode" min="0" max="100" value="0" aria-label="Pull the parts apart"></label>
+      <button class="btn" type="button" id="reset">Close the hood</button>
+    </div>
+  </div>
+
+  <section class="list" aria-labelledby="parts-title">
+    <h2 id="parts-title">Parts in the bay</h2>
+    <ul id="parts-list"></ul>
+  </section>
+  <p class="note">Each part will open the coursework behind it, with my CAD models where I have them. I'm adding them one at a time.</p>
+</main>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const scene = $('#scene'), svg = $('#svg'), hood = $('#hood'), bay = $('#bay'), hint = $('#hint');
+  const latches = [$('#latch-l'), $('#latch-r')];
+  const parts = [...document.querySelectorAll('.part')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FULL = [0, 0, 600, 800], ZOOM = [80, 132, 440, 587];
+  let released = 0, stage = 'closed';
+
+  // plain list under the scene, for skimming and screen readers
+  parts.forEach((p) => { const li = document.createElement('li'); li.textContent = p.dataset.name; $('#parts-list').append(li); });
+
+  // stroke lengths so each part can "draw itself" when the bay comes alive
+  parts.forEach((p) => p.querySelectorAll('.shape, .detail').forEach((el) => {
+    try { el.style.setProperty('--len', Math.ceil(el.getTotalLength())); } catch (e) {}
+  }));
+
+  const setHint = (html) => { hint.innerHTML = html; };
+
+  function release(l) {
+    if (l.classList.contains('done') || stage !== 'closed') return;
+    l.classList.add('done'); l.setAttribute('aria-disabled', 'true');
+    released++;
+    if (released === 1) setHint('One more. Click the other <b>X</b>.');
+    if (released === 2) {
+      stage = 'popped'; scene.classList.add('is-popped');
+      hood.setAttribute('tabindex', '0'); hood.setAttribute('aria-disabled', 'false');
+      setHint('The hood popped. <b>Click the hood</b> to lift it.');
+      hood.focus({ preventScroll: true });
+    }
+  }
+  latches.forEach((l) => {
+    l.addEventListener('click', () => release(l));
+    l.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); release(l); } });
+  });
+
+  // smooth "camera" move: tween the SVG viewBox
+  function zoomTo(to, ms, done) {
+    const from = svg.getAttribute('viewBox').split(' ').map(Number);
+    if (reduce) { svg.setAttribute('viewBox', to.join(' ')); return done && done(); }
+    const t0 = performance.now();
+    const ease = (t) => 1 - Math.pow(1 - t, 4);
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / ms), k = ease(t);
+      svg.setAttribute('viewBox', from.map((v, i) => (v + (to[i] - v) * k).toFixed(2)).join(' '));
+      if (t < 1) requestAnimationFrame(step); else if (done) done();
+    };
+    requestAnimationFrame(step);
+  }
+
+  function openHood() {
+    if (stage !== 'popped') return;
+    stage = 'opening'; scene.classList.add('is-opening');
+    hood.setAttribute('tabindex', '-1'); hood.setAttribute('aria-disabled', 'true');
+    setHint('Lifting the hood...');
+    setTimeout(() => {
+      scene.classList.add('is-zoomed');
+      zoomTo(ZOOM, 1100, () => {
+        stage = 'alive';
+        bay.classList.remove('bay-off'); bay.classList.add('draw');
+        scene.classList.add('is-alive');
+        parts.forEach((p) => p.setAttribute('tabindex', '0'));
+        setTimeout(() => bay.classList.remove('draw'), reduce ? 0 : 2400);
+        setHint('Hover a part to light it up. Each part opens its <b>coursework soon</b>.');
+      });
+    }, reduce ? 0 : 900);
+  }
+  hood.addEventListener('click', openHood);
+  hood.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHood(); } });
+
+  // hover readout (and tap on phones)
+  const name = $('#readout-name');
+  parts.forEach((p) => {
+    const on = () => { if (stage !== 'alive') return; parts.forEach((q) => q.classList.toggle('on', q === p)); name.textContent = p.dataset.name; };
+    const off = () => { p.classList.remove('on'); name.textContent = 'Hover a part'; };
+    p.addEventListener('pointerenter', on); p.addEventListener('pointerleave', off);
+    p.addEventListener('focus', on); p.addEventListener('blur', off);
+    p.addEventListener('click', on);   // nothing opens yet: the coursework is still being added
+  });
+
+  // "Pull apart": each part slides away from the middle of the bay, like the enclosure viewer
+  const C = { x: 300, y: 420 };
+  const vec = parts.map((p) => {
+    const b = p.getBBox(), cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+    return { dx: cx - C.x, dy: cy - C.y };   // farther parts move farther; the engine in the middle barely moves
+  });
+  $('#explode').addEventListener('input', (e) => {
+    const k = e.target.value / 100 * 0.4;
+    parts.forEach((p, i) => { p.style.transform = `translate(${(vec[i].dx * k).toFixed(1)}px, ${(vec[i].dy * k).toFixed(1)}px)`; });
+  });
+
+  $('#reset').addEventListener('click', () => {
+    $('#explode').value = 0; parts.forEach((p) => { p.style.transform = ''; p.classList.remove('on'); p.setAttribute('tabindex', '-1'); });
+    scene.classList.remove('is-alive');
+    bay.classList.add('bay-off');
+    zoomTo(FULL, 800, () => {
+      scene.classList.remove('is-zoomed', 'is-opening', 'is-popped');
+      latches.forEach((l) => { l.classList.remove('done'); l.removeAttribute('aria-disabled'); });
+      released = 0; stage = 'closed';
+      setHint('Click both <b>X</b> marks to release the hood catches.');
+    });
+  });
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "6ed43d34957a49fcb90ec8e43f7db523"}'></script>
+</body>
+</html>
