@@ -127,6 +127,28 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 .draw .shape, .draw .detail { stroke-dasharray: var(--len, 1200); stroke-dashoffset: var(--len, 1200); animation: draw 1.1s var(--ease) forwards; animation-delay: var(--d, 0s); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
+.part .dot { fill: var(--accent); stroke: none; transform-box: fill-box; transform-origin: center; }
+.is-alive .part.cad .dot { animation: dotpulse 1.8s ease-in-out infinite; }
+@keyframes dotpulse { 50% { opacity: .35; transform: scale(.75); } }
+
+/* spotlight: the bay blurs and my model turns in the middle */
+.spot { position: absolute; inset: 0; z-index: 5; background: rgba(5, 10, 11, .55);
+  -webkit-backdrop-filter: blur(12px) saturate(.8); backdrop-filter: blur(12px) saturate(.8);
+  opacity: 0; transition: opacity .45s var(--ease); }
+.spot[hidden] { display: none; }
+.spot.is-open { opacity: 1; }
+.spot canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; outline: none; }
+.spot canvas:active { cursor: grabbing; }
+.spot__hint { position: absolute; top: 18px; left: 18px; font-family: var(--font-mono); font-size: .78rem; color: var(--muted); pointer-events: none; transition: opacity .4s; }
+.spot__close { position: absolute; top: 12px; right: 14px; z-index: 2; }
+.spot__card { position: absolute; left: 16px; bottom: 16px; max-width: 390px; display: grid; gap: 6px; padding: 16px 18px; border-radius: 16px;
+  background: rgba(7, 16, 18, .84); border: 1px solid var(--line); transform: translateY(12px); transition: transform .5s var(--ease); pointer-events: none; }
+.spot.is-open .spot__card { transform: none; }
+.spot__eyebrow { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); }
+.spot__title { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; letter-spacing: -.02em; line-height: 1.15; }
+.spot__text { color: var(--muted); font-size: .95rem; }
+@media (max-width: 640px) { .spot__card { left: 10px; right: 10px; bottom: 10px; max-width: none; } }
+
 .list { display: grid; gap: 6px; }
 .list h2 { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
 .list ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -227,6 +249,30 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
           <circle class="detail" cx="169" cy="472" r="8"/>
           <text class="label" x="169" y="568">WASHER</text>
         </g>
+
+        <!-- parts with my CAD models behind them (the orange dot means "opens a 3D model") -->
+        <g class="part cad" data-name="Wheel hub" data-model="hub" tabindex="-1" role="button" aria-label="Wheel hub: open my SolidWorks model" style="--d:1.35s">
+          <rect class="shape" x="42" y="204" width="38" height="132" rx="11"/>
+          <path class="detail" d="M48 240 H74 M48 300 H74"/>
+          <circle class="dot" cx="61" cy="270" r="6"/>
+          <text class="label" x="61" y="356">WHEEL HUB</text>
+        </g>
+        <g class="part cad" data-name="Wheel hub" data-model="hub" tabindex="-1" role="button" aria-label="Wheel hub: open my SolidWorks model" style="--d:1.4s">
+          <rect class="shape" x="520" y="204" width="38" height="132" rx="11"/>
+          <path class="detail" d="M526 240 H552 M526 300 H552"/>
+          <circle class="dot" cx="539" cy="270" r="6"/>
+          <text class="label" x="539" y="356">WHEEL HUB</text>
+        </g>
+        <g class="part cad" data-name="Hood hinge" data-model="hinge" tabindex="-1" role="button" aria-label="Hood hinge: open my SolidWorks model" style="--d:1.5s">
+          <rect class="shape" x="122" y="150" width="36" height="18" rx="4"/>
+          <circle class="dot" cx="140" cy="159" r="5"/>
+          <text class="label" x="140" y="142">HOOD HINGE</text>
+        </g>
+        <g class="part cad" data-name="Hood hinge" data-model="hinge" tabindex="-1" role="button" aria-label="Hood hinge: open my SolidWorks model" style="--d:1.55s">
+          <rect class="shape" x="442" y="150" width="36" height="18" rx="4"/>
+          <circle class="dot" cx="460" cy="159" r="5"/>
+          <text class="label" x="460" y="142">HOOD HINGE</text>
+        </g>
       </g>
 
       <!-- shadow line that appears when the hood pops -->
@@ -263,6 +309,17 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
       <p class="readout" id="readout">Part<strong id="readout-name">Hover a part</strong></p>
     </div>
 
+    <div class="spot" id="spot" hidden role="dialog" aria-modal="true" aria-labelledby="spot-title">
+      <canvas id="spot-canvas" tabindex="0" aria-label="3D model. Drag or use the arrow keys to turn it."></canvas>
+      <p class="spot__hint" id="spot-hint">Drag to turn it</p>
+      <button class="btn spot__close" type="button" id="spot-close">Back to the bay</button>
+      <div class="spot__card">
+        <p class="spot__eyebrow" id="spot-eyebrow"></p>
+        <h2 class="spot__title" id="spot-title"></h2>
+        <p class="spot__text" id="spot-text"></p>
+      </div>
+    </div>
+
     <div class="bar">
       <label class="range">Pull apart <input type="range" id="explode" min="0" max="100" value="0" aria-label="Pull the parts apart"></label>
       <button class="btn" type="button" id="reset">Close the hood</button>
@@ -283,11 +340,11 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   const latches = [$('#latch-l'), $('#latch-r')];
   const parts = [...document.querySelectorAll('.part')];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const FULL = [0, 0, 600, 800], ZOOM = [80, 132, 440, 587];
+  const FULL = [0, 0, 600, 800], ZOOM = [30, 132, 540, 587];
   let released = 0, stage = 'closed';
 
   // plain list under the scene, for skimming and screen readers
-  parts.forEach((p) => { const li = document.createElement('li'); li.textContent = p.dataset.name; $('#parts-list').append(li); });
+  [...new Set(parts.map((p) => p.dataset.name + (p.dataset.model ? ' (CAD model)' : '')))].forEach((t) => { const li = document.createElement('li'); li.textContent = t; $('#parts-list').append(li); });
 
   // stroke lengths so each part can "draw itself" when the bay comes alive
   parts.forEach((p) => p.querySelectorAll('.shape, .detail').forEach((el) => {
@@ -340,7 +397,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
         scene.classList.add('is-alive');
         parts.forEach((p) => p.setAttribute('tabindex', '0'));
         setTimeout(() => bay.classList.remove('draw'), reduce ? 0 : 2400);
-        setHint('Hover a part to light it up. Each part opens its <b>coursework soon</b>.');
+        setHint('Hover a part to light it up. Parts with an <b>orange dot</b> open my CAD models.');
       });
     }, reduce ? 0 : 900);
   }
@@ -350,11 +407,130 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   // hover readout (and tap on phones)
   const name = $('#readout-name');
   parts.forEach((p) => {
-    const on = () => { if (stage !== 'alive') return; parts.forEach((q) => q.classList.toggle('on', q === p)); name.textContent = p.dataset.name; };
+    const on = () => { if (stage !== 'alive') return; parts.forEach((q) => q.classList.toggle('on', q === p)); name.textContent = p.dataset.name + (p.dataset.model ? ': click to open' : ''); };
     const off = () => { p.classList.remove('on'); name.textContent = 'Hover a part'; };
     p.addEventListener('pointerenter', on); p.addEventListener('pointerleave', off);
     p.addEventListener('focus', on); p.addEventListener('blur', off);
-    p.addEventListener('click', on);   // nothing opens yet: the coursework is still being added
+    p.addEventListener('click', () => { on(); if (stage === 'alive' && p.dataset.model) openSpot(p); });   // parts without a model don't open yet
+    p.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && stage === 'alive' && p.dataset.model) { e.preventDefault(); openSpot(p); } });
+  });
+
+  /* ---------- spotlight viewer: my STL exports, drawn with plain WebGL2 ---------- */
+  const MODELS = {
+    hub: { file: 'models/hub.bin', eyebrow: 'SolidWorks · Lab 3', title: 'Flanged hub',
+      text: 'Built as a parametric model, where the dimensions drive the shape. A 4-inch flange with six bolt holes, a centre bore, a ring groove and a cross pin hole. On a car, this is the shape a wheel bolts onto.' },
+    hinge: { file: 'models/hinge.bin', yaw0: 0.7 + Math.PI, eyebrow: 'SolidWorks · Assignment', title: 'Hinge',
+      text: 'A 120 by 70 mm mounting plate with a pin barrel on a braced arm. A car hood swings open on hinges like this one.' }
+  };
+  const spot = $('#spot'), cv = $('#spot-canvas');
+  let gl = null, prog = null, U = {}, cache = {}, cur = null, raf = 0, opener = null;
+  let yaw = 0.7, pitch = 0.32, vel = 0, dragging = false, lastX = 0, lastY = 0, idleAt = 0;
+
+  function initGL() {
+    if (gl) return true;
+    gl = cv.getContext('webgl2', { antialias: true, alpha: true, premultipliedAlpha: true });
+    if (!gl) return false;
+    const VS = `#version 300 es
+      in vec3 aPos; uniform mat4 uProj, uView; out vec3 vPos;
+      void main(){ vec4 p = uView * vec4(aPos.x, aPos.z, -aPos.y, 1.0); vPos = p.xyz; gl_Position = uProj * p; }`;
+    const FS = `#version 300 es
+      precision highp float; in vec3 vPos; uniform vec3 uColor, uRim; out vec4 o;
+      void main(){
+        vec3 nrm = normalize(cross(dFdx(vPos), dFdy(vPos)));
+        vec3 v = normalize(-vPos); if (dot(nrm, v) < 0.0) nrm = -nrm;
+        vec3 L = normalize(vec3(0.5, 0.8, 0.6));
+        float key = max(dot(nrm, L), 0.0), fill = max(dot(nrm, normalize(vec3(-0.7, -0.2, 0.4))), 0.0) * 0.35;
+        float rim = pow(1.0 - max(dot(nrm, v), 0.0), 2.5);
+        float spec = pow(max(dot(reflect(-L, nrm), v), 0.0), 28.0) * 0.3;
+        o = vec4(uColor * (0.26 + key * 0.85 + fill) + uRim * rim * 0.6 + spec, 1.0);
+      }`;
+    const sh = (t, src) => { const x = gl.createShader(t); gl.shaderSource(x, src); gl.compileShader(x); return x; };
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.bindAttribLocation(prog, 0, 'aPos'); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { gl = null; return false; }
+    ['uProj', 'uView', 'uColor', 'uRim'].forEach((k) => { U[k] = gl.getUniformLocation(prog, k); });
+    return true;
+  }
+
+  function loadModel(key) {
+    if (cache[key]) return Promise.resolve(cache[key]);
+    return fetch(MODELS[key].file).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((buf) => {
+      const dv = new DataView(buf);
+      if (dv.getUint32(0, true) !== 0x31485455) throw new Error('bad model');
+      const nv = dv.getUint32(4, true), ni = dv.getUint32(8, true);
+      let o = 16;
+      const pos = new Int16Array(buf, o, nv * 3); o += nv * 6 + ((nv * 3) % 2 ? 2 : 0);
+      const idx = new Uint16Array(buf, o, ni);
+      const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.SHORT, true, 0, 0);
+      const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+      gl.bindVertexArray(null);
+      return (cache[key] = { vao, count: ni });
+    });
+  }
+
+  const mul = (a, b) => { const r = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let x = 0; for (let k = 0; k < 4; k++) x += a[k * 4 + j] * b[i * 4 + k]; r[i * 4 + j] = x; } return r; };
+  const rotX = (t) => { const c = Math.cos(t), s = Math.sin(t); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); };
+  const rotY = (t) => { const c = Math.cos(t), s = Math.sin(t); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); };
+  const trans = (y, z) => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, y, z, 1]);
+  const persp = (fov, a, n, f) => { const t = 1 / Math.tan(fov / 2); return new Float32Array([t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]); };
+
+  function draw() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST); gl.useProgram(prog);
+    const aspect = w / h, dist = 4.6 / Math.min(1, aspect * 1.05);
+    gl.uniformMatrix4fv(U.uProj, false, persp(0.6, aspect, 0.1, 50));
+    gl.uniformMatrix4fv(U.uView, false, mul(trans(aspect < 0.8 ? 0.55 : 0, -dist), mul(rotX(pitch), rotY(yaw))));
+    gl.uniform3f(U.uColor, 0.62, 0.74, 0.76); gl.uniform3f(U.uRim, 0.39, 0.82, 0.78);
+    gl.bindVertexArray(cur.vao); gl.drawElements(gl.TRIANGLES, cur.count, gl.UNSIGNED_SHORT, 0);
+  }
+  function frame(t) {
+    if (!cur) return;
+    if (!dragging) {
+      if (Math.abs(vel) > 0.0005) { yaw += vel; vel *= 0.94; }
+      else if (!reduce && t - idleAt > 1200) yaw += 0.0065;   // slow turntable when left alone
+    }
+    draw(); raf = requestAnimationFrame(frame);
+  }
+
+  function openSpot(part) {
+    const m = MODELS[part.dataset.model]; if (!m) return;
+    opener = part;
+    $('#spot-eyebrow').textContent = m.eyebrow; $('#spot-title').textContent = m.title; $('#spot-text').textContent = m.text;
+    $('#spot-hint').textContent = 'Loading the model...';
+    spot.hidden = false; requestAnimationFrame(() => spot.classList.add('is-open'));
+    $('#spot-close').focus({ preventScroll: true });
+    if (!initGL()) { $('#spot-hint').textContent = 'Your browser can\'t show 3D models.'; return; }
+    yaw = m.yaw0 || 0.7; pitch = 0.32; vel = 0; idleAt = 0;
+    loadModel(part.dataset.model).then((mdl) => {
+      cur = mdl; $('#spot-hint').textContent = 'Drag to turn it';
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
+    }).catch(() => { $('#spot-hint').textContent = 'The model could not load.'; });
+  }
+  function closeSpot() {
+    if (spot.hidden) return;
+    spot.classList.remove('is-open'); cur = null; cancelAnimationFrame(raf);
+    setTimeout(() => { spot.hidden = true; }, reduce ? 0 : 420);
+    if (opener) opener.focus({ preventScroll: true });
+  }
+  $('#spot-close').addEventListener('click', closeSpot);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSpot(); });
+  cv.addEventListener('pointerdown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; vel = 0; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY;
+    yaw += dx * 0.01; vel = dx * 0.01; pitch = Math.max(-1.2, Math.min(1.2, pitch + dy * 0.01));
+  });
+  const endDrag = (e) => { if (!dragging) return; dragging = false; idleAt = performance.now(); };
+  cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+  cv.addEventListener('keydown', (e) => {
+    const k = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, -0.12], ArrowDown: [0, 0.12] }[e.key];
+    if (!k) return; e.preventDefault(); yaw += k[0]; pitch = Math.max(-1.2, Math.min(1.2, pitch + k[1])); idleAt = performance.now();
   });
 
   // "Pull apart": each part slides away from the middle of the bay, like the enclosure viewer
@@ -369,6 +545,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   });
 
   $('#reset').addEventListener('click', () => {
+    closeSpot();
     $('#explode').value = 0; parts.forEach((p) => { p.style.transform = ''; p.classList.remove('on'); p.setAttribute('tabindex', '-1'); });
     scene.classList.remove('is-alive');
     bay.classList.add('bay-off');
