@@ -2135,8 +2135,8 @@ window.PROFILE = {
     ];
     const lip = 3.2, mod = 13, px0 = 48.48, py0 = 21.38;
     const hw = [
-      { ...box(0, 0, lip, 192.96, 110.76, 5), color: 'glass', lift: 10 },
-      { ...box(13.98, 4.88, lip + mod - 1.6, 165, 101, 1.6), color: 'board', lift: 30, name: '7-inch touchscreen', tag: [96, 55, lip + mod], left: true },
+      { ...box(0, 0, lip, 192.96, 110.76, 5), color: 'glass', lift: 12 },   // the panel and its board are one display module, so they move together
+      { ...box(13.98, 4.88, lip + mod - 1.6, 165, 101, 1.6), color: 'board', lift: 12, name: '7-inch touchscreen', tag: [96, 55, lip + mod], left: true },
       { ...box(px0 + 5, py0 + 6, lip + mod + 15, 85, 56, 1.6), color: 'pi', lift: 50, name: 'Raspberry Pi 5', tag: [96, 55, lip + mod + 16], left: true },
       { ...box(px0 + 28, py0 + 18, lip + mod + 17, 40, 40, 15), color: 'cooler', lift: 50 }
     ];
@@ -2241,7 +2241,7 @@ window.PROFILE = {
       };
       if (showHw) {
         hw.forEach(drawOne);
-        bendRibbon(lip + mod + 30 * ex * hk, lip + mod + 15 + 50 * ex * hk);   // follows the board (lift 30) and the Pi (lift 50)
+        bendRibbon(lip + mod + 12 * ex * hk, lip + mod + 15 + 50 * ex * hk);   // follows the display board (lift 12) and the Pi (lift 50)
         gl.uniform3f(U.uOff, 0, 0, 0); gl.uniform1f(U.uScale, 1); gl.uniform3fv(U.uColor, C.ribbon); gl.uniform1f(U.uAlpha, 1);
         gl.bindVertexArray(rib.vao); gl.drawElements(gl.TRIANGLES, rib.count, gl.UNSIGNED_SHORT, 0);
       }
@@ -2257,12 +2257,23 @@ window.PROFILE = {
         // keep every label inside the viewer, even on narrow phones
         const lw = el.offsetWidth, fw = fig.clientWidth;
         const lx = Math.max(8, Math.min(fw - lw - 8, left ? sx - 10 - lw : sx + 10));
-        el.style.transform = `translate(${lx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(0, -50%)`;
         el.style.opacity = show ? '1' : '0';
+        return { el, x: lx, y: sy, w: lw, h: el.offsetHeight, show };
       };
-      parts.forEach((p, i) => place(tags[i], tagAt[i], p.lift, ex > 0.45));
+      const placed = [
+        ...parts.map((p, i) => place(tags[i], tagAt[i], p.lift, ex > 0.45)),
+        ...hwTags.map((t) => place(t.el, t.part.tag, t.part.lift, showHw && ex > 0.45, t.part.left))   // electronics on the left, printed parts on the right
+      ];
+      // labels never sit on top of each other: walk up from the bottom (the slider bar is down there) and nudge any overlapping one higher
+      const vis = placed.filter((l) => l.show).sort((a, b) => b.y - a.y);
+      vis.forEach((l, i) => {
+        for (let j = 0; j < i; j++) {
+          const o = vis[j], gap = (l.h + o.h) / 2 + 6;
+          if (l.x < o.x + o.w + 6 && o.x < l.x + l.w + 6 && o.y - l.y < gap) l.y = o.y - gap;
+        }
+      });
+      placed.forEach((l) => { l.el.style.transform = `translate(${l.x.toFixed(1)}px, ${l.y.toFixed(1)}px) translate(0, -50%)`; });
       if (status) status.style.opacity = ex > 0.45 && fig.clientWidth < 560 ? '0' : '';   // phones: the pill would sit on the lid label
-      hwTags.forEach((t) => place(t.el, t.part.tag, t.part.lift, showHw && ex > 0.45, t.part.left));   // electronics on the left, printed parts on the right
     }
 
     const loop = () => {
