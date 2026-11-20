@@ -66,11 +66,9 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 .readout strong { display: block; color: var(--accent); font-weight: 500; font-size: .95rem; }
 .is-alive .readout { opacity: 1; }
 
-.bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px;
+.bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 16px; padding: 12px 16px;
   background: linear-gradient(to top, rgba(7, 16, 18, .92), rgba(7, 16, 18, 0)); opacity: 0; transform: translateY(10px); transition: opacity .5s, transform .5s var(--ease); pointer-events: none; }
 .is-alive .bar { opacity: 1; transform: none; pointer-events: auto; }
-.range { display: flex; align-items: center; gap: 10px; flex: 1 1 200px; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
-.range input { flex: 1; accent-color: var(--accent); cursor: pointer; }
 .btn { font-family: var(--font-mono); font-size: .8rem; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
 .btn:hover { border-color: var(--ink); }
 
@@ -203,8 +201,8 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
         <path class="art" d="M120 40 L480 40 L520 150 L530 640 Q530 760 420 770 L180 770 Q70 760 70 640 L80 150 Z"/>
         <path class="art dim" d="M140 40 L170 128 L430 128 L460 40"/>
         <!-- wheels peeking out at the sides -->
-        <rect class="art" x="48" y="210" width="26" height="120" rx="8"/>
-        <rect class="art" x="526" y="210" width="26" height="120" rx="8"/>
+        <rect class="art" x="48" y="472" width="26" height="120" rx="8"/>
+        <rect class="art" x="526" y="472" width="26" height="120" rx="8"/>
         <!-- headlights and grille -->
         <path class="art" d="M96 660 Q100 720 160 738 L188 700 Q130 690 112 650 Z"/>
         <path class="art" d="M504 660 Q500 720 440 738 L412 700 Q470 690 488 650 Z"/>
@@ -261,16 +259,16 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
 
         <!-- parts with my CAD models behind them (the orange dot means "opens a 3D model") -->
         <g class="part cad" data-name="Wheel hub" data-model="hub" tabindex="-1" role="button" aria-label="Wheel hub: open my SolidWorks model" style="--d:1.35s">
-          <rect class="shape" x="42" y="204" width="38" height="132" rx="11"/>
-          <path class="detail" d="M48 240 H74 M48 300 H74"/>
-          <circle class="dot" cx="61" cy="270" r="6"/>
-          <text class="label" x="61" y="356">WHEEL HUB</text>
+          <rect class="shape" x="42" y="466" width="38" height="132" rx="11"/>
+          <path class="detail" d="M48 502 H74 M48 562 H74"/>
+          <circle class="dot" cx="61" cy="532" r="6"/>
+          <text class="label" x="61" y="456">WHEEL HUB</text>
         </g>
         <g class="part cad" data-name="Wheel hub" data-model="hub" tabindex="-1" role="button" aria-label="Wheel hub: open my SolidWorks model" style="--d:1.4s">
-          <rect class="shape" x="520" y="204" width="38" height="132" rx="11"/>
-          <path class="detail" d="M526 240 H552 M526 300 H552"/>
-          <circle class="dot" cx="539" cy="270" r="6"/>
-          <text class="label" x="539" y="356">WHEEL HUB</text>
+          <rect class="shape" x="520" y="466" width="38" height="132" rx="11"/>
+          <path class="detail" d="M526 502 H552 M526 562 H552"/>
+          <circle class="dot" cx="539" cy="532" r="6"/>
+          <text class="label" x="539" y="456">WHEEL HUB</text>
         </g>
         <g class="part cad" data-name="Hood hinge" data-model="hinge" tabindex="-1" role="button" aria-label="Hood hinge: open my SolidWorks model" style="--d:1.5s">
           <rect class="shape" x="122" y="150" width="36" height="18" rx="4"/>
@@ -330,7 +328,6 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
     </div>
 
     <div class="bar">
-      <label class="range">Pull apart <input type="range" id="explode" min="0" max="100" value="0" aria-label="Pull the parts apart"></label>
       <button class="btn" type="button" id="reset">Close the hood</button>
     </div>
   </div>
@@ -542,20 +539,9 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
     if (!k) return; e.preventDefault(); yaw += k[0]; pitch = Math.max(-1.2, Math.min(1.2, pitch + k[1])); idleAt = performance.now();
   });
 
-  // "Pull apart": each part slides away from the middle of the bay, like the enclosure viewer
-  const C = { x: 300, y: 420 };
-  const vec = parts.map((p) => {
-    const b = p.getBBox(), cx = b.x + b.width / 2, cy = b.y + b.height / 2;
-    return { dx: cx - C.x, dy: cy - C.y };   // farther parts move farther; the engine in the middle barely moves
-  });
-  $('#explode').addEventListener('input', (e) => {
-    const k = e.target.value / 100 * 0.4;
-    parts.forEach((p, i) => { p.style.transform = `translate(${(vec[i].dx * k).toFixed(1)}px, ${(vec[i].dy * k).toFixed(1)}px)`; });
-  });
-
   $('#reset').addEventListener('click', () => {
     closeSpot();
-    $('#explode').value = 0; parts.forEach((p) => { p.style.transform = ''; p.classList.remove('on'); p.setAttribute('tabindex', '-1'); });
+    parts.forEach((p) => { p.classList.remove('on'); p.setAttribute('tabindex', '-1'); });
     scene.classList.remove('is-alive');
     bay.classList.add('bay-off');
     zoomTo(FULL, 800, () => {
