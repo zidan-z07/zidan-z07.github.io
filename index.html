@@ -427,6 +427,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .goal__label { font-family: var(--font-mono); font-size: var(--label); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
 .goal__text { color: var(--ink); }
+.goal.card__purpose { margin-top: 0; padding: 14px 16px; }
 .prose { max-width: 64ch; font-size: 1.1rem; min-width: 0; color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
 
 .idcard {
@@ -1144,6 +1145,10 @@ window.PROFILE = {
       collaborators: "Built with Ibrahim Qureshi",
       collaboratorLink: { name: "Ibrahim Qureshi", url: "https://ibrahim-portfolio-dusky.vercel.app/#top" },
       description: "A Raspberry Pi running a local AI model that reads live OBD-II data through an ELM327 adapter and shows it on a 7‑inch touchscreen. We tested it on a real car with real drivers, and it works.",
+      purpose: {                                     // the "why" box under the description
+        heading: "Why we built it",
+        text: "A personal side project Ibrahim and I took on ourselves, not for school. We kept seeing drivers speed, so we built it to help people slow down. Using it made us more careful behind the wheel, and a couple of friends who drove with it said it made them feel more accountable and drive more safely."
+      },
       highlights: [
         "Designed and built 3 versions of the enclosure for the Raspberry Pi and 7‑inch touchscreen in OpenSCAD, and reworked the vent layout after an early version blocked access to ports.",
         "Helped write the Python scripts that pull live vehicle data from the ELM327 adapter and display it on the touchscreen."
@@ -1170,6 +1175,7 @@ window.PROFILE = {
         button: "How I ran it",
         title: "How I ran my part of the project",
         steps: [
+          { heading: "Why we built it", text: "This was a personal side project, done on our own and not connected to school. We kept seeing drivers speed, and we wanted to build something that helps people slow down. We drove with it ourselves and it made us more diligent, and a couple of our friends who drove with it said it made them feel more accountable and pushed them to drive more safely. Safety was the point from the start." },
           { heading: "The goal", text: "Build a car assistant that answers plain-English questions like \"is my engine running hot?\" using an AI model running on a Raspberry Pi, with nothing sent to the cloud." },
           { heading: "The team and my role", text: "Two of us. Ibrahim led the AI and software side. I owned the hardware enclosure and helped write the Python that reads live data from the ELM327 adapter." },
           { heading: "What I had to plan around", items: [
@@ -1648,6 +1654,10 @@ window.PROFILE = {
           h('h3', { class: 'card__title', text: p.title }),
           p.collaborators ? collabLine(p) : null,
           p.description ? h('p', { class: 'card__desc', text: p.description }) : null,
+          p.purpose && p.purpose.text ? h('div', { class: 'goal card__purpose' },
+            p.purpose.heading ? h('p', { class: 'goal__label', text: p.purpose.heading }) : null,
+            h('p', { class: 'goal__text', text: p.purpose.text })
+          ) : null,
           list(p.highlights).length ? h('ul', { class: 'job__wins' }, list(p.highlights).map((t) => h('li', { text: t }))) : null,
           list(p.tech).length ? chips(p.tech, 'Tools') : null,
           (caseSteps(p).length || safeUrl(p.repo)) ? h('div', { class: 'card__actions' },
