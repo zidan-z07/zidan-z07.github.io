@@ -825,6 +825,7 @@ html.sheet-open { overflow: hidden; }
   background: color-mix(in srgb, var(--surface) 86%, transparent); opacity: 0; transition: opacity .25s var(--ease);
 }
 .viewer__tag::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); margin-right: 7px; vertical-align: 1px; }
+.viewer__tag--hw::before { background: var(--accent); }   /* electronics get an orange dot; printed parts teal */
 @media (min-width: 961px) {
   .card--featured.has-viewer { grid-template-rows: auto auto 1fr; }
   .card--featured.has-viewer .card__media { grid-row: 2; }
@@ -2135,10 +2136,32 @@ window.PROFILE = {
     const lip = 3.2, mod = 13, px0 = 48.48, py0 = 21.38;
     const hw = [
       { ...box(0, 0, lip, 192.96, 110.76, 5), color: 'glass', lift: 10 },
-      { ...box(13.98, 4.88, lip + mod - 1.6, 165, 101, 1.6), color: 'board', lift: 30 },
-      { ...box(px0 + 5, py0 + 6, lip + mod + 15, 85, 56, 1.6), color: 'pi', lift: 50 },
+      { ...box(13.98, 4.88, lip + mod - 1.6, 165, 101, 1.6), color: 'board', lift: 30, name: '7-inch touchscreen', tag: [96, 55, lip + mod], left: true },
+      { ...box(px0 + 5, py0 + 6, lip + mod + 15, 85, 56, 1.6), color: 'pi', lift: 50, name: 'Raspberry Pi 5', tag: [96, 55, lip + mod + 16], left: true },
       { ...box(px0 + 28, py0 + 18, lip + mod + 17, 40, 40, 15), color: 'cooler', lift: 50 }
     ];
+    // The DSI ribbon cable from the screen's board up to the Pi: a flat strip that bends in an S and
+    // stretches as the layers pull apart, so it is rebuilt every frame.
+    const rib = (() => {
+      const N = 16, pos = new Float32Array(N * 6), idx = [];
+      for (let i = 0; i < N - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
+      const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+      gl.bindVertexArray(null);
+      return { vao, vb, pos, N, count: idx.length };
+    })();
+    const bendRibbon = (zb, zp) => {   // zb: top of the screen board, zp: underside of the Pi (mm)
+      const ax = 50, bx = 58, y0 = 47, y1 = 63, out = 14, dz = zp - zb;
+      for (let i = 0; i < rib.N; i++) {
+        const t = i / (rib.N - 1), u = 1 - t;
+        const x = u * u * u * ax + 3 * u * u * t * (ax - out) + 3 * u * t * t * (bx - out) + t * t * t * bx;
+        const z = u * u * u * zb + 3 * u * u * t * (zb + dz * 0.25) + 3 * u * t * t * (zp - dz * 0.25) + t * t * t * zp;
+        rib.pos.set([x, y0, z, x, y1, z], i * 6);
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, rib.vb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, rib.pos);
+    };
     const tagAt = [[205, 55, 8], [145, 55, 40], [146, 55, 60]];   // where each part's label hangs (mm, before lifting)
 
     // ---- colours follow the site theme
@@ -2151,7 +2174,7 @@ window.PROFILE = {
         frame: dark ? [0.20, 0.25, 0.26] : [0.30, 0.35, 0.36],
         pod: dark ? [0.28, 0.34, 0.35] : [0.45, 0.50, 0.51],
         lid: hex(cs.getPropertyValue('--accent')),
-        glass: [0.04, 0.06, 0.08], board: [0.12, 0.30, 0.72], pi: [0.10, 0.48, 0.22], cooler: [0.72, 0.74, 0.76],
+        glass: [0.04, 0.06, 0.08], board: [0.12, 0.30, 0.72], pi: [0.10, 0.48, 0.22], cooler: [0.72, 0.74, 0.76], ribbon: [0.86, 0.84, 0.78],
         rim: hex(cs.getPropertyValue('--accent-2'))
       };
     };
@@ -2167,14 +2190,16 @@ window.PROFILE = {
     const base = mul(rotX(-Math.PI / 2), trans(-96.5, -55.4, 0));   // then the stack's centre is moved to the origin in draw()
 
     // ---- state
-    let yaw = 2.5, pitch = 0.42, ex = 0, exTarget = 0, showHw = false, dist = 300, visible = false, spin = !reduceMotion, raf = 0;
+    let yaw = 2.5, pitch = 0.42, ex = 0, exTarget = 0, hk = 1, hkTarget = 1, showHw = false, dist = 300, visible = false, spin = !reduceMotion, raf = 0;
     let W = 1, H = 1, lift0 = 12;
 
     const tags = parts.map((p) => h('span', { class: 'viewer__tag', 'aria-hidden': 'true', text: p.name }));
+    // electronics labels, shown with "Show electronics" once the parts are apart
+    const hwTags = hw.filter((x) => x.name).map((x) => ({ part: x, el: h('span', { class: 'viewer__tag viewer__tag--hw', 'aria-hidden': 'true', text: x.name }) }));
     const hint = h('span', { class: 'viewer__hint', 'aria-hidden': 'true', text: finePointer ? 'Drag to rotate' : 'Swipe sideways to rotate' });
     const range = h('input', { type: 'range', min: '0', max: '100', value: '0', 'aria-label': 'Pull the parts apart' });
     const hwBtn = h('button', { class: 'viewer__btn', type: 'button', 'aria-pressed': 'false', text: 'Show electronics' });
-    const fig = h('figure', { class: 'viewer' }, canvas, hint, ...tags,
+    const fig = h('figure', { class: 'viewer' }, canvas, hint, ...tags, ...hwTags.map((t) => t.el),
       h('div', { class: 'viewer__bar' },
         h('label', { class: 'viewer__range' }, h('span', { text: 'Explode' }), range),
         hwBtn
@@ -2203,36 +2228,48 @@ window.PROFILE = {
       gl.useProgram(prog);
       const proj = persp(0.62, W / H, 10, 2000);
       // keep the stack centred and in frame as it grows taller
-      const view = mul(trans(0, lift0 + ex * lift0 * 0.6, -dist - ex * 190), mul(rotX(pitch), mul(rotY(yaw), mul(base, trans(0, 0, -30 - ex * 75)))));
+      const view = mul(trans(0, lift0 + ex * lift0 * 0.6, -dist - ex * 190 * hk), mul(rotX(pitch), mul(rotY(yaw), mul(base, trans(0, 0, -30 - ex * 75 * hk)))));
       gl.uniformMatrix4fv(U.uProj, false, proj);
       gl.uniformMatrix4fv(U.uView, false, view);
       gl.uniform3fv(U.uRim, C.rim);
       const drawOne = (p) => {
-        gl.uniform3f(U.uOff, 0, 0, p.lift * ex);
+        gl.uniform3f(U.uOff, 0, 0, p.lift * ex * hk);
         gl.uniform1f(U.uScale, p.scale);
         gl.uniform3fv(U.uColor, C[p.color]);
         gl.uniform1f(U.uAlpha, 1);
         gl.bindVertexArray(p.vao); gl.drawElements(gl.TRIANGLES, p.count, gl.UNSIGNED_SHORT, 0);
       };
-      if (showHw) hw.forEach(drawOne);
+      if (showHw) {
+        hw.forEach(drawOne);
+        bendRibbon(lip + mod + 30 * ex * hk, lip + mod + 15 + 50 * ex * hk);   // follows the board (lift 30) and the Pi (lift 50)
+        gl.uniform3f(U.uOff, 0, 0, 0); gl.uniform1f(U.uScale, 1); gl.uniform3fv(U.uColor, C.ribbon); gl.uniform1f(U.uAlpha, 1);
+        gl.bindVertexArray(rib.vao); gl.drawElements(gl.TRIANGLES, rib.count, gl.UNSIGNED_SHORT, 0);
+      }
       parts.forEach(drawOne);
       gl.bindVertexArray(null);
 
       // labels: project each part's anchor to the screen; shown once the parts are apart
       const pv = mul(proj, view);
-      parts.forEach((p, i) => {
-        const [x, y, z] = tagAt[i]; const zz = z + p.lift * ex;
+      const place = (el, [x, y, z], lift, show, left) => {
+        const zz = z + lift * ex * hk;
         const cx = pv[0] * x + pv[4] * y + pv[8] * zz + pv[12], cy = pv[1] * x + pv[5] * y + pv[9] * zz + pv[13], cw = pv[3] * x + pv[7] * y + pv[11] * zz + pv[15];
         const sx = (cx / cw * 0.5 + 0.5) * fig.clientWidth, sy = (0.5 - cy / cw * 0.5) * fig.clientHeight;
-        tags[i].style.transform = `translate(${(sx + 10).toFixed(1)}px, ${sy.toFixed(1)}px) translate(0, -50%)`;
-        tags[i].style.opacity = ex > 0.45 ? '1' : '0';
-      });
+        // keep every label inside the viewer, even on narrow phones
+        const lw = el.offsetWidth, fw = fig.clientWidth;
+        const lx = Math.max(8, Math.min(fw - lw - 8, left ? sx - 10 - lw : sx + 10));
+        el.style.transform = `translate(${lx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(0, -50%)`;
+        el.style.opacity = show ? '1' : '0';
+      };
+      parts.forEach((p, i) => place(tags[i], tagAt[i], p.lift, ex > 0.45));
+      if (status) status.style.opacity = ex > 0.45 && fig.clientWidth < 560 ? '0' : '';   // phones: the pill would sit on the lid label
+      hwTags.forEach((t) => place(t.el, t.part.tag, t.part.lift, showHw && ex > 0.45, t.part.left));   // electronics on the left, printed parts on the right
     }
 
     const loop = () => {
       raf = 0;
       let moving = false;
       if (Math.abs(exTarget - ex) > 0.001) { ex += (exTarget - ex) * (reduceMotion ? 1 : 0.14); moving = true; } else ex = exTarget;
+      if (Math.abs(hkTarget - hk) > 0.001) { hk += (hkTarget - hk) * (reduceMotion ? 1 : 0.14); moving = true; } else hk = hkTarget;
       if (spin && visible && !document.hidden) { yaw += 0.0035; moving = true; }
       draw();
       if (moving) raf = requestAnimationFrame(loop);
@@ -2261,7 +2298,9 @@ window.PROFILE = {
     });
     range.addEventListener('input', () => { exTarget = range.value / 100; fig.classList.add('is-touched'); kick(); });
     hwBtn.addEventListener('click', () => {
-      showHw = !showHw; hwBtn.setAttribute('aria-pressed', String(showHw)); kick();
+      showHw = !showHw; hwBtn.setAttribute('aria-pressed', String(showHw));
+      hkTarget = showHw ? 2.2 : 1;   // spread the stack out so the Pi and screen get their own space and labels
+      kick();
     });
 
     new ResizeObserver(resize).observe(fig);
