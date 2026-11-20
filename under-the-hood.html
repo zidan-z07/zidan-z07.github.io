@@ -49,6 +49,14 @@ main { width: min(100% - 32px, 1100px); margin: 0 auto; padding: clamp(28px, 5vw
 .pill { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); border: 1px solid currentColor; border-radius: 99px; padding: 2px 10px; }
 h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: -.04em; line-height: 1.02; }
 .sub { color: var(--muted); max-width: 56ch; }
+.spec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 8px 10px 8px 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: linear-gradient(100deg, rgba(99, 209, 200, .08), rgba(255, 138, 76, .06)); }
+.spec__model { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: -.01em; text-transform: uppercase; margin-right: 4px; }
+.spec__year { color: var(--accent); }
+.spec__chip { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink);
+  padding: 3px 9px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); }
+.spec__chip--own { color: var(--accent-2); border-color: rgba(99, 209, 200, .4); }
+.cowl { font-family: var(--font-mono); font-size: 11px; letter-spacing: 4px; fill: rgba(99, 209, 200, .55); text-anchor: middle; }
 
 /* ---------- the scene ---------- */
 .scene { position: relative; border: 1px solid var(--line); border-radius: 22px; overflow: hidden;
@@ -183,7 +191,13 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
   <div class="head">
     <p class="pill">SolidWorks coursework</p>
     <h1>Under the Hood</h1>
-    <p class="sub">My coursework, shown as the parts of a car. Pop the hood to look inside.</p>
+    <div class="spec" aria-label="The car: my 2013 Ford Fusion Sport Edition, all-wheel drive">
+      <span class="spec__model"><span class="spec__year">2013</span> Ford Fusion</span>
+      <span class="spec__chip">Sport Edition</span>
+      <span class="spec__chip">All-wheel drive</span>
+      <span class="spec__chip spec__chip--own">My daily driver</span>
+    </div>
+    <p class="sub">My coursework, shown as the parts of my own car. Pop the hood to look inside.</p>
   </div>
 
   <div class="scene" id="scene">
@@ -203,10 +217,20 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 
         <!-- wheels peeking out at the sides -->
         <rect class="art" x="48" y="472" width="26" height="120" rx="8"/>
         <rect class="art" x="526" y="472" width="26" height="120" rx="8"/>
-        <!-- headlights and grille -->
-        <path class="art" d="M96 660 Q100 720 160 738 L188 700 Q130 690 112 650 Z"/>
-        <path class="art" d="M504 660 Q500 720 440 738 L412 700 Q470 690 488 650 Z"/>
-        <path class="art dim" d="M210 742 L390 742 M222 754 L378 754"/>
+        <!-- side mirrors at the windshield corners -->
+        <path class="art" d="M82 148 L52 156 Q46 166 54 176 L84 172 Z"/>
+        <path class="art" d="M518 148 L548 156 Q554 166 546 176 L516 172 Z"/>
+        <!-- model name on the windshield cowl -->
+        <text class="cowl" x="300" y="112">2013 FORD FUSION · AWD</text>
+        <!-- 2013 Fusion front: slim headlights swept back along the fenders, wide trapezoid grille with horizontal bars -->
+        <path class="art" d="M90 610 Q92 690 150 730 L200 716 Q128 684 106 606 Z"/>
+        <path class="art" d="M510 610 Q508 690 450 730 L400 716 Q472 684 494 606 Z"/>
+        <path class="art dim" d="M104 640 Q120 690 162 714 M496 640 Q480 690 438 714"/>
+        <path class="art" d="M232 746 L368 746 L354 768 L246 768 Z"/>
+        <path class="art dim" d="M240 753 L360 753 M244 760 L356 760"/>
+        <!-- fog lights -->
+        <circle class="art dim" cx="132" cy="748" r="7"/>
+        <circle class="art dim" cx="468" cy="748" r="7"/>
       </g>
 
       <!-- the engine bay (under the hood) -->
