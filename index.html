@@ -206,6 +206,12 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .nav__brand span { color: var(--accent); }
 .nav__links { display: flex; gap: 4px; margin-left: auto; }
+.macnet { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); color: var(--muted); text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: .74rem; letter-spacing: -.01em; white-space: nowrap; transition: color .25s, border-color .25s, background-color .25s; }
+.macnet svg { width: 15px; height: 15px; color: #f2b84b; transition: transform .35s; }
+.macnet b { color: #f2b84b; font-weight: inherit; }
+.macnet:hover, .macnet:focus-visible { color: var(--text, #fff); border-color: rgba(242, 184, 75, .55); background: rgba(242, 184, 75, .08); }
+.macnet:hover svg { transform: translateX(2px); }
+@media (max-width: 520px) { .macnet span { display: none; } .macnet { padding: 6px; } }
 .nav__links a {
   text-decoration: none; font-size: .9rem; font-weight: 500; color: var(--muted);
   padding: 8px 12px; border-radius: 99px; transition: color .2s, background-color .2s;
@@ -938,6 +944,7 @@ kbd {
         <line class="tach__needle" id="tach-needle" x1="23" y1="24" x2="9" y2="24"/>
         <circle class="tach__hub" cx="23" cy="24" r="2.4"/>
       </svg>
+      <a class="macnet" href="https://macnetwork.ca" target="_blank" rel="noopener" aria-label="Member of mac.network, McMaster students on the web" title="I'm on mac.network"><svg viewBox="0 0 400 400" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M110 118 L208 200 L110 282"/><path d="M208 200 H296"/></g><g fill="currentColor"><circle cx="110" cy="118" r="34"/><circle cx="110" cy="282" r="34"/><circle cx="300" cy="200" r="38"/></g></svg><span>mac<b>.</b>network</span></a>
       <nav class="nav__links" id="nav-links" aria-label="Sections">
         <a href="#experience" data-section="experience">Experience</a>
         <a href="#projects" data-section="projects">Projects</a>
