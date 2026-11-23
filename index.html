@@ -1215,6 +1215,20 @@ window.PROFILE = {
         { src: "images/face.png", alt: "3D render of the front frame, a rectangular bezel with mounting holes" },
         { src: "images/back.png", alt: "3D render of the back plate with a raised open-sided housing and mounting holes" }
       ]
+    },
+    {
+      title: "mac.network",
+      status: "Live",
+      role: "Founder · Web design",
+      description: "A directory of personal websites made by McMaster students, sorted by faculty. I came up with the idea, designed and built the site, and launched it at macnetwork.ca.",
+      highlights: [
+        "Built the site from scratch: a section for each of McMaster's six faculties plus the Arts & Science Program, each with its own colour and a hover animation of four hand-drawn icons.",
+        "Set up free hosting on GitHub Pages with a custom domain and HTTPS, and a review process so every new member is approved before going live."
+      ],
+      tech: ["HTML/CSS", "JavaScript", "GitHub Pages", "DNS"],
+      images: [{ src: "images/mac-network.jpg", alt: "The mac.network home page, with the Engineering icons bursting out on hover" }],
+      site: "https://macnetwork.ca",
+      repo: "https://github.com/zidan-z07/mac-network"
     }
   ],
 
@@ -1680,7 +1694,7 @@ window.PROFILE = {
           ) : null,
           list(p.highlights).length ? h('ul', { class: 'job__wins' }, list(p.highlights).map((t) => h('li', { text: t }))) : null,
           list(p.tech).length ? chips(p.tech, 'Tools') : null,
-          (caseSteps(p).length || safeUrl(p.repo)) ? h('div', { class: 'card__actions' },
+          (caseSteps(p).length || safeUrl(p.repo) || safeUrl(p.site)) ? h('div', { class: 'card__actions' },
             caseSteps(p).length ? sheetButton(p.caseStudy.button || 'Case study', () => ({
               eyebrow: 'Project',
               title: p.title,
@@ -1691,6 +1705,7 @@ window.PROFILE = {
               wide: true,
               tags: p.tech
             })) : null,
+            safeUrl(p.site) ? h('a', { class: 'btn btn--primary more-btn', ...external(safeUrl(p.site)) }, 'Visit site', icon('arrow')) : null,
             safeUrl(p.repo) ? h('a', { class: 'btn btn--ghost more-btn', ...external(safeUrl(p.repo)) }, 'GitHub', icon('arrow')) : null
           ) : null
         ),
