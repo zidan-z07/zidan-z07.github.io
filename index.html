@@ -588,6 +588,7 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .photo { margin: 0; position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 10; max-width: 100%; background: #f8f8f8; }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
 .card__thumbs .photo { aspect-ratio: 16 / 10; }
+.photo--banner, .card--featured .card__media > .photo--banner { aspect-ratio: 1128 / 191; background: #0b0a0c; }
 
 .card__body { padding: 18px 24px 24px; display: grid; gap: 12px; flex: 1; align-content: start; min-width: 0; }
 .card--featured .card__body { padding: 26px 28px 28px 18px; align-content: center; }
@@ -623,6 +624,8 @@ button.job__media:focus-visible { outline: 2px solid var(--accent); outline-offs
 .ask__chain { display: flex; flex-wrap: wrap; gap: 4px 8px; font-family: var(--font-mono); font-size: var(--label); color: var(--ink); }
 .ask__arrow { color: var(--accent-2); }
 .ask__note { font-size: .875rem; color: var(--muted); padding: 0 8px; }
+/* compact card: extra photos live in "How I ran it"; the demo keeps just the question and tools */
+.card--featured .card__thumbs, .ask__hint, .ask__chain, .ask__note { display: none; }
 @media (max-width: 560px) {
   .ask__in { padding: 12px; }
   .ask__tool { padding-inline: 8px; }
@@ -1160,14 +1163,6 @@ window.PROFILE = {
       collaborators: "Built with Ibrahim Qureshi",
       collaboratorLink: { name: "Ibrahim Qureshi", url: "https://ibrahim-portfolio-dusky.vercel.app/#top" },
       description: "A Raspberry Pi running a local AI model that reads live OBD-II data through an ELM327 adapter and shows it on a 7‑inch touchscreen. We tested it on a real car with real drivers, and it works.",
-      purpose: {                                     // the "why" box under the description
-        heading: "Why we built it",
-        text: "A personal side project Ibrahim and I took on ourselves, not for school. We kept seeing drivers speed, so we built it to help people slow down. Using it made us more careful behind the wheel, and a couple of friends who drove with it said it made them feel more accountable and drive more safely."
-      },
-      highlights: [
-        "Designed and built 3 versions of the enclosure for the Raspberry Pi and 7‑inch touchscreen in OpenSCAD, and reworked the vent layout after an early version blocked access to ports.",
-        "Helped write the Python scripts that pull live vehicle data from the ELM327 adapter and display it on the touchscreen."
-      ],
       tech: ["Python", "Raspberry Pi", "ELM327", "OpenSCAD"],
       demo: {                                        // the "ask it a question" picture under the photos
         label: "Ask it a question",
@@ -1217,12 +1212,8 @@ window.PROFILE = {
       status: "Live",
       role: "Founder · Web design",
       description: "A directory of personal websites made by McMaster students, sorted by faculty. I came up with the idea, designed and built the site, and launched it at macnetwork.ca.",
-      highlights: [
-        "Built the site from scratch: a section for each of McMaster's six faculties plus the Arts & Science Program, each with its own colour and a hover animation of four hand-drawn icons.",
-        "Set up free hosting on GitHub Pages with a custom domain and HTTPS, and a review process so every new member is approved before going live."
-      ],
       tech: ["HTML/CSS", "JavaScript", "GitHub Pages", "DNS"],
-      images: [{ src: "images/mac-network.jpg", alt: "The mac.network home page, with the Engineering icons bursting out on hover" }],
+      images: [{ src: "images/mac-network-banner.png", alt: "mac.network banner: McMaster students on the web", banner: true }],
       site: "https://macnetwork.ca",
       repo: "https://github.com/zidan-z07/mac-network"
     }
@@ -1653,8 +1644,8 @@ window.PROFILE = {
   }
 
   function photo(img, title, i) {
-    return h('figure', { class: 'photo' },
-      h('img', { src: safeUrl(img.src), alt: img.alt || `${title} photo ${i + 1}`, loading: i ? 'lazy' : 'eager', decoding: 'async', width: 1000, height: 700 }));
+    return h('figure', { class: img.banner ? 'photo photo--banner' : 'photo' },
+      h('img', { src: safeUrl(img.src), alt: img.alt || `${title} photo ${i + 1}`, loading: i ? 'lazy' : 'eager', decoding: 'async', width: img.banner ? 1128 : 1000, height: img.banner ? 191 : 700 }));
   }
 
   const caseSteps = (p) => list(p.caseStudy && p.caseStudy.steps).filter((st) => st.heading && (st.text || list(st.items).length));
