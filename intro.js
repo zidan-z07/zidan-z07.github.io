@@ -301,7 +301,7 @@
     cam.classList.add('zi-roll');
     await sleep(T.startPause);
     const lines = [...stage.querySelectorAll('.zi-line')];
-    for (let n = 0; n < LINES.length; n++) {
+    for (const n of [1, 0]) {   // Zuberi first, then Zidan (Zidan asked for this order)
       const line = lines[n], word = line.querySelector('.zi-word'), caret = line.querySelector('.zi-caret'),
             x = line.querySelector('.zi-x'), glow = line.querySelector('.zi-glow');
       caret.classList.add('zi-typing');
