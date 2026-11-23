@@ -23,7 +23,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const LINES = [
-    { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANE', 'ZIDANE']], answer: 'ZIDAN' },
+    { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANÉ', 'ZIDANÉ']], answer: 'ZIDAN' },
     { tries: ['ZUBEERR', 'ZUBERYY', 'ZUBEYR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
   const T = { type: 38, del: 20, xHold: 170, afterOk: 120, glow: 750, cut: 1000, startPause: 250, linger: 1100, fade: 550 };
@@ -276,9 +276,13 @@
     const cy = (Math.min(...rects.map(r => r.t)) + Math.max(...rects.map(r => r.b))) / 2;
     const dist = (x, y) => Math.min(...rects.map(r => Math.hypot(Math.max(r.l - x, 0, x - r.r), Math.max(r.t - y, 0, y - r.b))));
     const need = .44 * em * .6 + GAP * em;
+    const reach = deg => { const a = deg * Math.PI / 180; let d = 0;
+      while (dist(cx + d * Math.cos(a), cy + d * Math.sin(a)) < need && d < 4000) d += 1; return d; };
+    // mirror pairs (left/right of centre) use the same distance so the layout is symmetrical
+    const mirror = deg => ((180 - deg + 540) % 360) - 180;
     burst.querySelectorAll('i').forEach((ic, k) => {
-      const a = ANGLES[k] * Math.PI / 180; let d = 0, x = cx, y = cy;
-      while (dist(x, y) < need && d < 4000) { d += 1; x = cx + d * Math.cos(a); y = cy + d * Math.sin(a); }
+      const deg = ANGLES[k], a = deg * Math.PI / 180, d = Math.max(reach(deg), reach(mirror(deg)));
+      const x = cx + d * Math.cos(a), y = cy + d * Math.sin(a);
       ic.style.setProperty('--sx', cx + 'px'); ic.style.setProperty('--sy', cy + 'px');
       ic.style.setProperty('--x', (x - cx).toFixed(1) + 'px'); ic.style.setProperty('--y', (y - cy).toFixed(1) + 'px');
       ic.style.setProperty('--r', TILTS[k] + 'deg');
@@ -296,7 +300,8 @@
   async function play() {
     // lock the block to the final width so the name doesn't slide sideways while typing
     const m = document.createElement('span'); m.className = 'zi-word'; m.style.cssText = 'visibility:hidden;position:absolute'; stage.appendChild(m);
-    let wMax = 0; LINES.forEach(L => [...L.tries, L.answer].forEach(t => { m.textContent = t; wMax = Math.max(wMax, m.offsetWidth); }));
+    let wMax = 0; LINES.forEach(L => [L.answer].forEach(t => {   // size to the final name so it ends up centred (typos may run past on the right)
+      m.textContent = t; wMax = Math.max(wMax, m.offsetWidth); }));
     stage.style.width = wMax + 32 + 'px'; m.remove();
     cam.classList.add('zi-roll');
     await sleep(T.startPause);
