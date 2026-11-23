@@ -23,10 +23,10 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const LINES = [
-    { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', 'ZIDANE'], answer: 'ZIDAN' },
+    { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANE', 'ZIDANE']], answer: 'ZIDAN' },
     { tries: ['ZUBEERR', 'ZUBERYY', 'ZUBEYR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
-  const T = { type: 38, del: 20, xHold: 170, afterOk: 120, glow: 750, startPause: 250, linger: 1100, fade: 550 };
+  const T = { type: 38, del: 20, xHold: 170, afterOk: 120, glow: 750, cut: 1000, startPause: 250, linger: 1100, fade: 550 };
 
   /* ---------- styles (all prefixed zi- so nothing clashes with the page) ---------- */
   const css = `
@@ -50,11 +50,27 @@
   background: #e8364a; color: #fff; font-family: var(--font-mono); font-weight: 500; opacity: 0; transform: scale(.3); }
 .zi-x.zi-show { opacity: 1; transform: none; animation: zi-xpop .22s cubic-bezier(.3,1.55,.5,1); }
 @keyframes zi-xpop { 0% { transform: scale(.3) rotate(-30deg); } 100% { transform: scale(1) rotate(0); } }
-.zi-cut { position: relative; display: inline-block; }
-.zi-cut::after { content: ''; position: absolute; left: 0; right: 0; top: 48%; height: .09em; border-radius: .05em; background: #e8364a;
-  box-shadow: 0 0 .25em rgba(232,54,74,.6); transform: rotate(-48deg) scaleX(0); transform-origin: center; }
-.zi-cut.zi-go::after { animation: zi-slash .16s ease-out forwards; }
-@keyframes zi-slash { to { transform: rotate(-48deg) scaleX(1.25); } }
+.zi-cut { position: relative; display: inline-block; transform-origin: 30% 100%; }
+.zi-half { display: inline-block; }
+.zi-a { clip-path: polygon(-20% -20%, 120% -20%, 120% 22%, -20% 74%); }
+.zi-b { position: absolute; left: 0; top: 0; clip-path: polygon(-20% 74%, 120% 22%, 120% 120%, -20% 120%); }
+.zi-blade { position: absolute; left: -.3em; right: -.3em; top: 49%; height: .045em; border-radius: 1em; opacity: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0), #fff 35%, #fff 70%, rgba(255,255,255,0));
+  box-shadow: 0 0 .18em rgba(255,255,255,.9), 0 0 .5em rgba(140,200,255,.6); transform: rotate(-21deg) scaleX(0); transform-origin: left center; }
+.zi-cut.zi-go { animation: zi-scared 1s linear forwards; }
+@keyframes zi-scared {
+  0% { transform: none; }
+  12% { transform: translateY(-.06em) rotate(9deg) skewX(-8deg) scale(.9, 1.06); }
+  20%, 28%, 36%, 44%, 52%, 60% { transform: translate(.025em, -.06em) rotate(10deg) skewX(-8deg) scale(.9, 1.06); }
+  24%, 32%, 40%, 48%, 56% { transform: translate(-.025em, -.05em) rotate(7deg) skewX(-8deg) scale(.9, 1.06); }
+  64%, 100% { transform: translateY(-.06em) rotate(9deg) skewX(-8deg) scale(.9, 1.06); } }
+.zi-go .zi-blade { animation: zi-blade .22s .6s ease-out forwards; }
+@keyframes zi-blade { 0% { opacity: 1; transform: rotate(-21deg) scaleX(0); } 45% { opacity: 1; transform: rotate(-21deg) scaleX(1); }
+  100% { opacity: 0; transform: rotate(-21deg) scaleX(1); } }
+.zi-go .zi-a { animation: zi-fa .34s .66s cubic-bezier(.3,0,.8,.6) forwards; }
+.zi-go .zi-b { animation: zi-fb .34s .66s cubic-bezier(.3,0,.8,.6) forwards; }
+@keyframes zi-fa { to { transform: translate(.22em, -.2em) rotate(18deg); opacity: 0; } }
+@keyframes zi-fb { to { transform: translate(-.08em, .4em) rotate(-14deg); opacity: 0; } }
 .zi-line.zi-shake .zi-word { animation: zi-shake .18s linear; }
 @keyframes zi-shake { 25% { transform: translateX(-.03em); } 75% { transform: translateX(.03em); } }
 .zi-glow { position: absolute; left: -.12em; top: .06em; height: 1.02em; border-radius: .14em;
@@ -96,7 +112,7 @@
 .zi-calm .zi-dot { animation: none; }
 /* calmer version for reduce motion: no zoom, no shake, items fade in where they sit */
 .zi-calm .zi-cam, .zi-calm .zi-cam.zi-roll { transform: none; animation: none; }
-.zi-calm .zi-punch.zi-go, .zi-calm .zi-line.zi-shake .zi-word, .zi-calm .zi-x.zi-show, .zi-calm.zi-pop .zi-burst i svg { animation: none; }
+.zi-calm .zi-cut.zi-go, .zi-calm .zi-punch.zi-go, .zi-calm .zi-line.zi-shake .zi-word, .zi-calm .zi-x.zi-show, .zi-calm.zi-pop .zi-burst i svg { animation: none; }
 .zi-calm .zi-burst i { transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: opacity .4s ease; }
 `;
 
@@ -175,6 +191,23 @@
         const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
         o.frequency.value = fq; o2.type = 'triangle'; o2.frequency.value = fq * 2; g2.gain.value = .12; env(g, t + dt, .22, .008, .5);
         o.connect(g); o2.connect(g2).connect(g); g.connect(bus); o.start(t + dt); o2.start(t + dt); o.stop(t + dt + .55); o2.stop(t + dt + .55);
+      });
+    },
+    gulp() {      // small nervous wobble as the E notices the blade
+      if (!on()) return; const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), lf = ac.createOscillator(), lg = ac.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(380, t + .45);
+      lf.frequency.value = 18; lg.gain.value = 22; lf.connect(lg).connect(o.frequency);
+      env(g, t, .05, .03, .45); o.connect(g).connect(bus); o.start(t); lf.start(t); o.stop(t + .5); lf.stop(t + .5);
+    },
+    shwing() {    // samurai blade: fast rising swish, then a bright metal ring
+      if (!on()) return; const t = ac.currentTime;
+      const s = ac.createBufferSource(); s.buffer = noise(); s.loop = true; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.4;
+      bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(7000, t + .16);
+      const g = ac.createGain(); env(g, t, .42, .07, .14); s.connect(bp).connect(g).connect(bus); s.start(t); s.stop(t + .25);
+      [[2870, .07], [4130, .05], [5990, .035], [8420, .02]].forEach(([fq, pk]) => {
+        const o = ac.createOscillator(), og = ac.createGain(), at = t + .07;
+        o.frequency.setValueAtTime(fq * .97, at); o.frequency.exponentialRampToValueAtTime(fq, at + .05);
+        env(og, at, pk, .004, .7); o.connect(og).connect(bus); o.start(at); o.stop(at + .8);
       });
     },
     pop(n) {
@@ -273,7 +306,11 @@
             x = line.querySelector('.zi-x'), glow = line.querySelector('.zi-glow');
       caret.classList.add('zi-typing');
       let cur = '';
-      for (const guess of LINES[n].tries) {
+      for (let guess of LINES[n].tries) {
+        if (Array.isArray(guess)) {   // fix it like a person would: add the E, then go back and drop the A
+          for (const step of guess.slice(0, -1)) { await sleep(T.type); if (done) return; word.textContent = step; SFX.key(step.length < cur.length); cur = step; }
+          await sleep(T.type * 2); if (done) return; guess = guess[guess.length - 1]; word.textContent = guess; cur = guess; SFX.key(true); await sleep(T.del);
+        }
         await typeTo(word, cur, guess); cur = guess; if (done) return;
         word.classList.add('zi-wrong'); x.className = 'zi-x'; void x.offsetWidth; x.className = 'zi-x zi-show'; SFX.wrong();
         line.classList.remove('zi-shake'); void line.offsetWidth; line.classList.add('zi-shake');
@@ -283,9 +320,14 @@
       const ans = LINES[n].answer;
       if (cur.length > ans.length && cur.startsWith(ans)) {
         // the last try only has extra letters: slash them out before deleting (ZIDANE -> ZIDAN)
-        word.textContent = ans; const cut = document.createElement('span'); cut.className = 'zi-cut'; cut.textContent = cur.slice(ans.length);
-        word.appendChild(cut); void cut.offsetWidth; cut.classList.add('zi-go'); SFX.key(true);
-        await sleep(240); if (done) return;
+        // the extra letter gets scared, trembles, then a blade slices it in two
+        const extra = cur.slice(ans.length); word.textContent = ans;
+        const cut = document.createElement('span'); cut.className = 'zi-cut';
+        cut.innerHTML = `<span class="zi-half zi-a">${extra}</span><span class="zi-half zi-b">${extra}</span><span class="zi-blade"></span>`;
+        word.appendChild(cut); caret.classList.remove('zi-typing'); void cut.offsetWidth; cut.classList.add('zi-go'); SFX.gulp();
+        await sleep(T.cut * .62); if (done) return; SFX.shwing();
+        await sleep(T.cut * .38); if (done) return;
+        word.textContent = ans; cur = ans; caret.classList.add('zi-typing'); await sleep(T.afterOk);
       }
       await typeTo(word, cur, LINES[n].answer); if (done) return;
       caret.classList.remove('zi-typing'); line.classList.remove('zi-shake');
