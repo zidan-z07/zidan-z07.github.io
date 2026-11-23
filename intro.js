@@ -26,27 +26,25 @@
     { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANÉ', 'ZIDANÉ']], answer: 'ZIDAN' },
     { tries: ['ZUBEERR', 'ZUBERYY', 'ZUBEYR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
-  const T = { type: 38, del: 20, xHold: 170, afterOk: 120, glow: 750, cut: 1000, startPause: 250, linger: 1100, fade: 550 };
+  const T = { type: 62, del: 34, xHold: 340, afterOk: 220, glow: 750, cut: 1000, startPause: 350, linger: 1300, fade: 550 };   // slowed 2026-11-23 (slice kept at 1 s)
 
   /* ---------- styles (all prefixed zi- so nothing clashes with the page) ---------- */
   const css = `
 .zi { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden;
   background: var(--bg); color: var(--ink); font-family: var(--font-display); transition: opacity ${T.fade}ms ease; }
 .zi.zi-out { opacity: 0; pointer-events: none; }
-.zi-cam { transform: scale(.84); }
-.zi-cam.zi-roll { animation: zi-push 5.4s cubic-bezier(.25,.6,.3,1) forwards; }
-@keyframes zi-push { to { transform: scale(1.04); } }
+.zi-cam { transform: none; }   /* no camera zoom (Zidan, 2026-11-23) */
 .zi-punch.zi-go { animation: zi-punch .32s ease-out; }
 @keyframes zi-punch { 40% { transform: scale(1.045); } }
-.zi-stage { position: relative; display: grid; gap: .1em; justify-items: start; font-size: clamp(40px, 14vw, 150px); font-weight: 800;
+.zi-stage { position: relative; display: grid; gap: .1em; justify-items: center;   /* every line stays centred, even mid-typo */ font-size: clamp(32px, 11vw, 104px); font-weight: 800;
   letter-spacing: -.02em; line-height: 1.05; padding: 0 16px; }
 .zi-line { position: relative; display: flex; align-items: center; height: 1.15em; z-index: 1; }
 .zi-word { position: relative; white-space: pre; z-index: 1; }
 .zi-final .zi-word { transition: color .35s ease, text-shadow .35s ease; }
 .zi-word.zi-wrong { color: #e8364a; }
-.zi-caret { width: .06em; height: .82em; background: var(--ink); margin-left: .04em; opacity: 0; }
+.zi-caret { position: absolute; left: 100%; top: .165em; width: .06em; height: .82em; background: var(--ink); margin-left: .04em; opacity: 0; }
 .zi-caret.zi-typing { opacity: 1; }
-.zi-x { font-size: .32em; width: 1.25em; height: 1.25em; margin-left: .35em; border-radius: 50%; display: grid; place-items: center;
+.zi-x { position: absolute; left: 100%; top: 50%; margin-top: -.625em; font-size: .32em; width: 1.25em; height: 1.25em; margin-left: .55em; border-radius: 50%; display: grid; place-items: center;
   background: #e8364a; color: #fff; font-family: var(--font-mono); font-weight: 500; opacity: 0; transform: scale(.3); }
 .zi-x.zi-show { opacity: 1; transform: none; animation: zi-xpop .22s cubic-bezier(.3,1.55,.5,1); }
 @keyframes zi-xpop { 0% { transform: scale(.3) rotate(-30deg); } 100% { transform: scale(1) rotate(0); } }
@@ -111,7 +109,6 @@
   50% { transform: scale(1.35); box-shadow: 0 0 34px 10px color-mix(in srgb, var(--accent) 65%, transparent); } }
 .zi-calm .zi-dot { animation: none; }
 /* calmer version for reduce motion: no zoom, no shake, items fade in where they sit */
-.zi-calm .zi-cam, .zi-calm .zi-cam.zi-roll { transform: none; animation: none; }
 .zi-calm .zi-cut.zi-go, .zi-calm .zi-punch.zi-go, .zi-calm .zi-line.zi-shake .zi-word, .zi-calm .zi-x.zi-show, .zi-calm.zi-pop .zi-burst i svg { animation: none; }
 .zi-calm .zi-burst i { transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: opacity .4s ease; }
 `;
@@ -297,12 +294,7 @@
     while (s.length > i) { if (done) return; s = s.slice(0, -1); word.textContent = s; SFX.key(true); await sleep(T.del); }
     while (s.length < to.length) { if (done) return; s = to.slice(0, s.length + 1); word.textContent = s; SFX.key(false); await sleep(T.type); }
   }
-  function lockWidth() {
-    const m = document.createElement('span'); m.className = 'zi-word'; m.style.cssText = 'visibility:hidden;position:absolute'; stage.appendChild(m);
-    let wMax = 0; LINES.forEach(L => [L.answer].forEach(t => {   // size to the final name so it ends up centred (typos may run past on the right)
-      m.textContent = t; wMax = Math.max(wMax, m.offsetWidth); }));
-    stage.style.width = wMax + 32 + 'px'; m.remove();
-  }
+  function lockWidth() { stage.style.width = ''; }   // lines are centred, so no fixed width is needed
   async function play() {
     // lock the block to the final width so the name doesn't slide sideways while typing
     lockWidth(); if (document.fonts) document.fonts.ready.then(lockWidth);   // re-measure if the font arrives late
