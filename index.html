@@ -1834,7 +1834,7 @@ window.PROFILE = {
     });
   }
 
-  /* ---------- Extruded 3D name that follows the pointer ---------- */
+  /* ---------- Extruded 3D name, held still at its resting angle (Zidan asked for a static name, 2026-11-23) ---------- */
   function initExtrude() {
     const solid = $('.hero__name .line--solid');
     if (!solid) return;
@@ -1848,21 +1848,6 @@ window.PROFILE = {
       solid.style.textShadow = s.join(', ');
     };
     paint(0.6, 0.6);
-    if (!finePointer || reduceMotion) return;
-    let tx = 0.6, ty = 0.6, cx = tx, cy = ty, raf = 0;
-    const step = () => {
-      cx += (tx - cx) * 0.12; cy += (ty - cy) * 0.12;
-      paint(cx, cy);
-      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.01 ? requestAnimationFrame(step) : 0;
-    };
-    addEventListener('pointermove', (e) => {
-      const r = solid.getBoundingClientRect();
-      const nx = (e.clientX - (r.left + r.width / 2)) / innerWidth;
-      const ny = (e.clientY - (r.top + r.height / 2)) / innerHeight;
-      tx = Math.max(-1, Math.min(1, -nx * 2.2));
-      ty = Math.max(-1, Math.min(1, -ny * 2.2));
-      if (!raf) raf = requestAnimationFrame(step);
-    }, { passive: true });
   }
 
   /* ---------- Timeline: the line fills and dots light up as you scroll ---------- */
