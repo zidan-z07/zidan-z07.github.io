@@ -297,12 +297,15 @@
     while (s.length > i) { if (done) return; s = s.slice(0, -1); word.textContent = s; SFX.key(true); await sleep(T.del); }
     while (s.length < to.length) { if (done) return; s = to.slice(0, s.length + 1); word.textContent = s; SFX.key(false); await sleep(T.type); }
   }
-  async function play() {
-    // lock the block to the final width so the name doesn't slide sideways while typing
+  function lockWidth() {
     const m = document.createElement('span'); m.className = 'zi-word'; m.style.cssText = 'visibility:hidden;position:absolute'; stage.appendChild(m);
     let wMax = 0; LINES.forEach(L => [L.answer].forEach(t => {   // size to the final name so it ends up centred (typos may run past on the right)
       m.textContent = t; wMax = Math.max(wMax, m.offsetWidth); }));
     stage.style.width = wMax + 32 + 'px'; m.remove();
+  }
+  async function play() {
+    // lock the block to the final width so the name doesn't slide sideways while typing
+    lockWidth(); if (document.fonts) document.fonts.ready.then(lockWidth);   // re-measure if the font arrives late
     cam.classList.add('zi-roll');
     await sleep(T.startPause);
     const lines = [...stage.querySelectorAll('.zi-line')];
@@ -344,7 +347,7 @@
     }
     await sleep(T.glow * .45); if (done) return;
     lines.forEach(l => { const w = l.querySelector('.zi-word'); w.dataset.text = w.textContent; });
-    stage.classList.add('zi-final');
+    lockWidth(); stage.classList.add('zi-final');
     placeBurst(); root.classList.add('zi-pop'); ICONS.forEach((_, n) => SFX.pop(n));
     await sleep(T.linger);
     finish();
