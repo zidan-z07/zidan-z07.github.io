@@ -23,7 +23,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const LINES = [
-    { tries: ['ZI EDA', 'ZIDAY', 'ZIDEE', 'ZIDA'], answer: 'ZIDAN' },
+    { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', 'ZIDANE'], answer: 'ZIDAN' },
     { tries: ['ZUBEERR', 'ZUBERYY', 'ZUBEYR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
   const T = { type: 38, del: 20, xHold: 170, afterOk: 120, glow: 750, startPause: 250, linger: 1100, fade: 550 };
@@ -50,6 +50,11 @@
   background: #e8364a; color: #fff; font-family: var(--font-mono); font-weight: 500; opacity: 0; transform: scale(.3); }
 .zi-x.zi-show { opacity: 1; transform: none; animation: zi-xpop .22s cubic-bezier(.3,1.55,.5,1); }
 @keyframes zi-xpop { 0% { transform: scale(.3) rotate(-30deg); } 100% { transform: scale(1) rotate(0); } }
+.zi-cut { position: relative; display: inline-block; }
+.zi-cut::after { content: ''; position: absolute; left: 0; right: 0; top: 48%; height: .09em; border-radius: .05em; background: #e8364a;
+  box-shadow: 0 0 .25em rgba(232,54,74,.6); transform: rotate(-48deg) scaleX(0); transform-origin: center; }
+.zi-cut.zi-go::after { animation: zi-slash .16s ease-out forwards; }
+@keyframes zi-slash { to { transform: rotate(-48deg) scaleX(1.25); } }
 .zi-line.zi-shake .zi-word { animation: zi-shake .18s linear; }
 @keyframes zi-shake { 25% { transform: translateX(-.03em); } 75% { transform: translateX(.03em); } }
 .zi-glow { position: absolute; left: -.12em; top: .06em; height: 1.02em; border-radius: .14em;
@@ -257,8 +262,9 @@
   }
   async function play() {
     // lock the block to the final width so the name doesn't slide sideways while typing
-    const m = document.createElement('span'); m.className = 'zi-word'; m.textContent = 'ZUBERI'; m.style.cssText = 'visibility:hidden;position:absolute';
-    stage.appendChild(m); stage.style.width = m.offsetWidth + 32 + 'px'; m.remove();
+    const m = document.createElement('span'); m.className = 'zi-word'; m.style.cssText = 'visibility:hidden;position:absolute'; stage.appendChild(m);
+    let wMax = 0; LINES.forEach(L => [...L.tries, L.answer].forEach(t => { m.textContent = t; wMax = Math.max(wMax, m.offsetWidth); }));
+    stage.style.width = wMax + 32 + 'px'; m.remove();
     cam.classList.add('zi-roll');
     await sleep(T.startPause);
     const lines = [...stage.querySelectorAll('.zi-line')];
@@ -273,6 +279,13 @@
         line.classList.remove('zi-shake'); void line.offsetWidth; line.classList.add('zi-shake');
         await sleep(T.xHold); if (done) return;
         word.classList.remove('zi-wrong'); x.className = 'zi-x';
+      }
+      const ans = LINES[n].answer;
+      if (cur.length > ans.length && cur.startsWith(ans)) {
+        // the last try only has extra letters: slash them out before deleting (ZIDANE -> ZIDAN)
+        word.textContent = ans; const cut = document.createElement('span'); cut.className = 'zi-cut'; cut.textContent = cur.slice(ans.length);
+        word.appendChild(cut); void cut.offsetWidth; cut.classList.add('zi-go'); SFX.key(true);
+        await sleep(240); if (done) return;
       }
       await typeTo(word, cur, LINES[n].answer); if (done) return;
       caret.classList.remove('zi-typing'); line.classList.remove('zi-shake');
