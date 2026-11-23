@@ -7,8 +7,9 @@
    - Plays once per visit (per browser tab session). Add ?intro to the
      address to play it again.
    - Skip button and the Esc key end it straight away.
-   - Browsers block sound until the visitor clicks, so sound starts off and
-     there is a Sound button.
+   - It opens on a pulsing dot with "Click to enter". That click starts the
+     intro with sound (browsers only allow sound after a click). The Sound
+     button turns it off.
    - With "reduce motion" turned on, it plays a calmer version: no zoom,
      no shake, and the items fade in where they sit.
    ========================================================================== */
@@ -70,11 +71,24 @@
 .zi-pop .zi-burst i { opacity: 1; transform: translate(var(--x), var(--y)) scale(1) rotate(var(--r)); }
 .zi-pop .zi-burst i svg { animation: zi-bob 2.6s ease-in-out infinite; animation-delay: calc(.7s + var(--n) * .3s); }
 @keyframes zi-bob { 50% { transform: translateY(-.06em) rotate(5deg); } }
-.zi-ui { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 8px; font: 500 13px var(--font-mono); }
+.zi-waiting .zi-snd { display: none; }
+.zi-ui { position: fixed; right: 16px; bottom: 16px; z-index: 4; display: flex; gap: 8px; font: 500 13px var(--font-mono); }
 .zi-ui button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
   padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .zi-ui button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .zi-ui svg { width: 15px; height: 15px; }
+/* tap to enter: a glowing dot pulsing, with "Click to enter" under it. The click also unlocks sound */
+.zi-gate { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 22px; z-index: 3;
+  background: var(--bg); border: 0; color: var(--muted); cursor: pointer; font: 500 13px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+  transition: opacity .35s ease; }
+.zi-gate:focus-visible { outline: none; }
+.zi-gate:focus-visible .zi-dot { outline: 2px solid var(--accent); outline-offset: 10px; }
+.zi-gate.zi-gone { opacity: 0; pointer-events: none; }
+.zi-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 18px 4px color-mix(in srgb, var(--accent) 60%, transparent); animation: zi-pulse 1.6s ease-in-out infinite; }
+@keyframes zi-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 14px 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { transform: scale(1.35); box-shadow: 0 0 34px 10px color-mix(in srgb, var(--accent) 65%, transparent); } }
+.zi-calm .zi-dot { animation: none; }
 /* calmer version for reduce motion: no zoom, no shake, items fade in where they sit */
 .zi-calm .zi-cam, .zi-calm .zi-cam.zi-roll { transform: none; animation: none; }
 .zi-calm .zi-punch.zi-go, .zi-calm .zi-line.zi-shake .zi-word, .zi-calm .zi-x.zi-show, .zi-calm.zi-pop .zi-burst i svg { animation: none; }
@@ -114,9 +128,9 @@
   const ANGLES = [-162, -90, -18, 126, 54], TILTS = [-14, 10, 16, -10, 12], GAP = .3;
 
   /* ---------- sound: made in the browser, starts off until the visitor turns it on ---------- */
-  let ac = null, bus = null, soundOn = false;
+  let ac = null, bus = null, soundOn = true;
   const startAudio = () => {
-    if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
       bus = ac.createGain(); bus.gain.value = .55;
       const c = ac.createDynamicsCompressor(); c.threshold.value = -18; c.ratio.value = 6; c.attack.value = .002; c.release.value = .12;
       bus.connect(c).connect(ac.destination); }
@@ -126,7 +140,8 @@
   let nb = null;
   const noise = () => { if (nb) return nb; nb = ac.createBuffer(1, ac.sampleRate * .06, ac.sampleRate);
     const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return nb; };
-  const on = () => soundOn && ac;
+  // only play while the browser actually lets sound run, so blocked sounds never pile up and burst out later
+  const on = () => soundOn && ac && ac.state === 'running';
   const SFX = {
     key(back) {   // clean mechanical key: tiny click on a short rounded thock
       if (!on()) return; const t = ac.currentTime, v = .85 + Math.random() * .3;
@@ -167,12 +182,13 @@
   /* ---------- build it ---------- */
   const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
   const root = document.createElement('div');
-  root.className = 'zi' + (reduce ? ' zi-calm' : '');
+  root.className = 'zi zi-waiting' + (reduce ? ' zi-calm' : '');
   root.setAttribute('role', 'presentation');
   const lineHTML = n => `<div class="zi-line zi-l${n}"><span class="zi-glow"></span><span class="zi-word"></span><span class="zi-caret"></span><span class="zi-x">✕</span></div>`;
   const speaker = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
-  root.innerHTML = `<div class="zi-cam" aria-hidden="true"><div class="zi-punch"><div class="zi-stage"><span class="zi-burst"></span>${lineHTML(1)}${lineHTML(2)}</div></div></div>
-    <div class="zi-ui"><button type="button" class="zi-snd" aria-pressed="false">${speaker}<span>Sound</span></button><button type="button" class="zi-skip">Skip</button></div>`;
+  root.innerHTML = `<button type="button" class="zi-gate" aria-label="Click to enter the site"><span class="zi-dot"></span><span>Click to enter</span></button>
+    <div class="zi-cam" aria-hidden="true"><div class="zi-punch"><div class="zi-stage"><span class="zi-burst"></span>${lineHTML(1)}${lineHTML(2)}</div></div></div>
+    <div class="zi-ui"><button type="button" class="zi-snd" aria-pressed="true">${speaker}<span>Sound on</span></button><button type="button" class="zi-skip">Skip</button></div>`;
   const $ = s => root.querySelector(s);
   const stage = $('.zi-stage'), cam = $('.zi-cam'), punch = $('.zi-punch'), burst = $('.zi-burst');
   ICONS.forEach((ic, n) => { const i = document.createElement('i'); i.style.setProperty('--n', n); i.style.setProperty('--c', ic.c);
@@ -193,12 +209,24 @@
   const onKey = e => { if (e.key === 'Escape') finish(); };
   document.addEventListener('keydown', onKey);
   $('.zi-skip').addEventListener('click', finish);
-  $('.zi-snd').addEventListener('click', e => {
-    soundOn = !soundOn; if (soundOn) startAudio();
-    e.currentTarget.setAttribute('aria-pressed', String(soundOn));
-    e.currentTarget.querySelector('span').textContent = soundOn ? 'Sound on' : 'Sound';
+  const sndBtn = $('.zi-snd');
+  const label = () => {   // honest label: says "Tap for sound" while the browser is still holding sound back
+    const running = ac && ac.state === 'running';
+    sndBtn.setAttribute('aria-pressed', String(soundOn && running));
+    sndBtn.querySelector('span').textContent = !soundOn ? 'Sound off' : running ? 'Sound on' : 'Tap for sound';
+  };
+  let blockedAtPress = true;
+  sndBtn.addEventListener('pointerdown', () => { blockedAtPress = !(ac && ac.state === 'running'); }, { capture: true });
+  sndBtn.addEventListener('click', () => {
+    if (blockedAtPress && soundOn) startAudio();   // first press while blocked just starts the sound
+    else { soundOn = !soundOn; if (soundOn) startAudio(); }
+    blockedAtPress = false; label();
   });
-  setTimeout(() => { if (!done) $('.zi-skip').focus({ preventScroll: true }); }, 50);
+  label();
+  const unlock = () => { if (soundOn) startAudio(); };
+  ['pointerdown', 'touchstart', 'keydown'].forEach(t => root.addEventListener(t, unlock, { capture: true, passive: true }));
+  document.addEventListener('keydown', unlock, { capture: true });
+  setTimeout(() => { if (!done) $('.zi-gate').focus({ preventScroll: true }); }, 50);
 
   function placeBurst() {
     const em = parseFloat(getComputedStyle(stage).fontSize);
@@ -263,5 +291,15 @@
   }
 
   const fontReady = document.fonts && document.fonts.load ? document.fonts.load('800 1em Unbounded').catch(() => {}) : Promise.resolve();
-  Promise.race([fontReady, sleep(1500)]).then(() => { if (!done) play(); });
+  // wait for "Click to enter": that click starts the sound and the intro together
+  const gate = $('.zi-gate');
+  gate.addEventListener('click', () => {
+    soundOn = true; startAudio();
+    if (ac && !ac._ziLabel) { ac._ziLabel = true; ac.addEventListener('statechange', label); }
+    label();
+    root.classList.remove('zi-waiting');
+    gate.classList.add('zi-gone'); setTimeout(() => gate.remove(), 400);
+    $('.zi-skip').focus({ preventScroll: true });
+    Promise.race([fontReady, sleep(1500)]).then(() => { if (!done) play(); });
+  }, { once: true });
 })();
