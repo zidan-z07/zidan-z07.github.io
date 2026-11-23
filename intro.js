@@ -24,7 +24,7 @@
 
   const LINES = [
     { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANÉ', 'ZIDANÉ']], answer: 'ZIDAN' },
-    { tries: ['ZUBEERR', 'ZUBEYR', 'ZUBERY'], answer: 'ZUBERI' },
+    { tries: ['ZUBEERR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
   const T = { type: 62, del: 34, xHold: 340, afterOk: 220, glow: 750, cut: 1000, startPause: 350, linger: 1300, fade: 550 };   // slowed 2026-11-23 (slice kept at 1 s)
 
