@@ -26,7 +26,7 @@
     { tries: ['ZI EDA', 'ZIDAY', 'ZAIDAN', ['ZAIDANÉ', 'ZIDANÉ']], answer: 'ZIDAN' },
     { tries: ['ZUBEERR', 'ZUBERY'], answer: 'ZUBERI' },
   ];
-  const T = { type: 62, del: 34, xHold: 340, afterOk: 220, glow: 750, cut: 1000, startPause: 350, linger: 1300, fade: 550 };   // slowed 2026-11-23 (slice kept at 1 s)
+  const T = { type: 46, del: 26, xHold: 250, afterOk: 160, glow: 560, cut: 1000, startPause: 260, linger: 950, fade: 420 };   // ~25% faster 2026-11-23 (slice kept at 1 s)
 
   /* ---------- styles (all prefixed zi- so nothing clashes with the page) ---------- */
   const css = `
