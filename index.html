@@ -744,7 +744,35 @@ a.beyond-row:hover .beyond-row__go { color: var(--accent); transform: translate(
   font-family: var(--font-display); font-weight: 800; font-size: clamp(2.2rem, 7vw, 5.2rem);
   line-height: .98; letter-spacing: -.04em; max-width: 14ch;
 }
-.contact__title span { color: var(--accent); }
+.contact__title > span:not(.contact__perch) { color: var(--accent); }
+/* the little Claude on the b of "about": dances for a bit, then works on a laptop */
+.contact__perch { display: inline-block; padding-top: .45em; }   /* headroom, even when the heading wraps */
+.contact__b { position: relative; }
+.clawd { position: absolute; left: 30%; bottom: 1.01em; width: .62em; height: .41em; transform: translateX(-50%); overflow: visible; pointer-events: none; fill: #d97757; shape-rendering: crispEdges; }
+.clawd .eye { fill: var(--bg); }
+.clawd g { animation: 1.2s steps(1, end) infinite; }
+.clawd .all { animation-name: clawd-body; }
+.clawd .arm-l { animation-name: clawd-arm-l; }
+.clawd .arm-r { animation-name: clawd-arm-r; }
+.clawd .legs-a { animation-name: clawd-leg-a; }
+.clawd .legs-b { animation-name: clawd-leg-b; }
+@keyframes clawd-body { 0% { transform: translate(-1px, 0); } 25% { transform: translate(0, -1.5px); } 50% { transform: translate(1px, 0); } 75% { transform: translate(0, -1.5px); } }
+@keyframes clawd-arm-l { 0% { transform: translateY(-1.5px); } 25% { transform: none; } 50% { transform: translateY(1px); } 75% { transform: none; } }
+@keyframes clawd-arm-r { 0% { transform: translateY(1px); } 25% { transform: none; } 50% { transform: translateY(-1.5px); } 75% { transform: none; } }
+@keyframes clawd-leg-a { 0% { transform: none; } 50% { transform: translateY(-.8px); } }
+@keyframes clawd-leg-b { 0% { transform: translateY(-.8px); } 50% { transform: none; } }
+.clawd .dance { animation: clawd-first 10s steps(1, end) infinite; }
+.clawd .work { animation: clawd-second 10s steps(1, end) infinite; }
+.clawd .type-l { animation: clawd-type .34s steps(1, end) infinite; }
+.clawd .type-r { animation: clawd-type .34s steps(1, end) -.17s infinite; }
+.clawd .eyes { animation: clawd-blink 2.6s steps(1, end) infinite; }
+.clawd .lid { fill: #c3ccd1; }
+.clawd .base { fill: #8d979d; }
+@keyframes clawd-first { 0% { visibility: visible; } 50% { visibility: hidden; } }
+@keyframes clawd-second { 0% { visibility: hidden; } 50% { visibility: visible; } }
+@keyframes clawd-type { 0% { transform: translateY(.3px); } 50% { transform: translateY(1.1px); } }
+@keyframes clawd-blink { 0% { opacity: 1; } 90% { opacity: 0; } 95% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .clawd g { animation: none; } .clawd .work { visibility: hidden; } }
 .contact__blurb { color: var(--muted); max-width: 54ch; font-size: 1.125rem; }
 .contact__email {
   display: inline-flex; align-items: center; gap: 12px; max-width: 100%;
@@ -1773,8 +1801,21 @@ window.PROFILE = {
     const heading = String(c.heading || "Let's talk.").trim();
     const cut = heading.lastIndexOf(' ');
     const title = $('#contact-title');
-    if (cut > 0) title.append(heading.slice(0, cut + 1), h('span', { text: heading.slice(cut + 1) }));
-    else title.textContent = heading;
+    if (cut > 0) {
+      const lead = heading.slice(0, cut + 1), at = lead.indexOf('about');
+      if (at >= 0) {
+        const perch = h('span', { class: 'contact__b', text: 'b' });
+        perch.insertAdjacentHTML('beforeend', '<svg class="clawd" viewBox="0 0 12 8" aria-hidden="true"><g class="dance"><g class="all">'
+          + '<g class="legs-a"><path d="M2 5.5h1V8H2zM7 5.5h1V8H7z"/></g><g class="legs-b"><path d="M4 5.5h1V8H4zM9 5.5h1V8H9z"/></g>'
+          + '<g class="arm-l"><path d="M0 2h2.2v2H0z"/></g><g class="arm-r"><path d="M9.8 2H12v2H9.8z"/></g>'
+          + '<path d="M2 0h8v6H2z"/><path class="eye" d="M3 1h1v1H3zM8 1h1v1H8z"/></g></g>'
+          + '<g class="work"><path d="M2 0h8v6H2zM2 6h1v2H2zM9 6h1v2H9z"/><g class="eyes"><path class="eye" d="M3 1.4h1v1H3zM8 1.4h1v1H8z"/></g>'
+          + '<g class="type-l"><path d="M0 3h2.2v2H0z"/></g><g class="type-r"><path d="M9.8 3H12v2H9.8z"/></g>'
+          + '<path class="lid" d="M2.6 3.2h6.8v4H2.6z"/><path d="M5.4 4.6h1.2v1.2H5.4z"/><path class="base" d="M1.4 7.1h9.2v.9H1.4z"/></g></svg>');
+        title.append(lead.slice(0, at), h('span', { class: 'contact__perch' }, 'a', perch, 'out'), lead.slice(at + 5));
+      } else title.append(lead);
+      title.append(h('span', { text: heading.slice(cut + 1) }));
+    } else title.textContent = heading;
     $('#contact-blurb').textContent = c.blurb || '';
 
     if (p.email) {
