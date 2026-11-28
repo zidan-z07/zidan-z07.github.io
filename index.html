@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-scrub">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -41,7 +41,7 @@
   /* Dark by default; a saved choice from the toggle wins. Runs before first paint so there is no flash. */
   try { var t = localStorage.getItem('theme'); document.documentElement.dataset.theme = (t === 'light' || t === 'dark') ? t : 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
 </script>
-<link rel="preload" as="image" href="hero-poster.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="hero-still.jpg" fetchpriority="high">
 <link rel="preload" as="font" type="font/woff2" href="fonts/unbounded-400-800.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/hanken-grotesk-400-600.woff2" crossorigin>
 <style>
@@ -995,7 +995,7 @@ kbd {
     <section class="hero" id="top" aria-labelledby="hero-name">
       <div class="hero__stage">
         <div class="hero__media" aria-hidden="true">
-          <video class="hero__video" id="hero-video" muted playsinline preload="none" poster="hero-poster.jpg" tabindex="-1" disablepictureinpicture disableremoteplayback></video>
+          <img class="hero__video" id="hero-still" src="hero-still.jpg" alt="" width="1280" height="720" fetchpriority="high" decoding="async">
         </div>
         <div class="wrap hero__inner">
         <p class="hero__status" id="hero-status" hidden><span class="pulse" aria-hidden="true"></span><span id="hero-status-text"></span></p>
@@ -1981,69 +1981,8 @@ window.PROFILE = {
     });
   }
 
-  /* ---------- Hero video that moves forward as you scroll ---------- */
-  function initScrollHero() {
-    const hero = $('#top'), stage = $('.hero__stage'), media = $('.hero__media'), video = $('#hero-video');
-    if (!hero || !stage || !media || !video) return;
-    const off = () => root.classList.add('no-scrub');   // falls back to the still first frame
-    const saveData = !!(navigator.connection && navigator.connection.saveData);
-    if (reduceMotion || saveData) return off();
-
-    const wide = matchMedia('(min-width: 861px) and (min-height: 620px)');
-    const clamp01 = (v) => Math.min(1, Math.max(0, v));
-    let target = 0, current = 0, shown = -1, ready = false, raf = 0;
-
-    const tick = () => {
-      raf = 0;
-      current += (target - current) * 0.2;
-      if (Math.abs(target - current) < 0.0015) current = target;
-      if (ready && !video.seeking) {
-        const t = current * Math.max(0, video.duration - 0.05);
-        if (Math.abs(t - shown) > 0.012) { shown = t; video.currentTime = t; }
-      }
-      if (current !== target || (ready && video.seeking)) raf = requestAnimationFrame(tick);
-    };
-
-    const measure = () => {
-      const pin = wide.matches ? stage : media;
-      const travel = hero.offsetHeight - pin.offsetHeight;
-      const top = parseFloat(getComputedStyle(pin).top) || 0;
-      target = travel > 0 ? clamp01((top - hero.getBoundingClientRect().top) / travel) : 0;
-      // On large screens the text and its dark backing fade away so the end of the clip is clear.
-      const fade = wide.matches ? 1 - clamp01((target - 0.5) / 0.28) : 1;
-      hero.style.setProperty('--hero-fade', fade.toFixed(3));
-      hero.classList.toggle('is-clear', fade < 0.02);
-      if (!raf) raf = requestAnimationFrame(tick);
-    };
-
-    // Phones only decode frames for a video that has been played once, so play and pause straight away.
-    const prime = () => {
-      const p = video.play();
-      const done = () => { video.pause(); shown = -1; measure(); };
-      if (p && p.then) p.then(done).catch(() => addEventListener('touchstart', prime, { once: true, passive: true }));
-      else done();
-    };
-
-    const start = (url) => {
-      video.addEventListener('loadeddata', () => { ready = true; prime(); measure(); }, { once: true });
-      video.addEventListener('error', () => { if (!ready) off(); }, { once: true });
-      video.preload = 'auto';
-      video.src = url;
-      video.load();
-    };
-
-    // Download the whole clip first so every frame is in memory and scrubbing never waits on the network.
-    const src = matchMedia('(max-width: 860px)').matches ? 'hero-mobile.mp4' : 'hero.mp4';
-    fetch(src)
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('video'))))
-      .then((b) => start(URL.createObjectURL(b)))
-      .catch(() => start(src));
-
-    addEventListener('scroll', measure, { passive: true });
-    addEventListener('resize', measure);
-    wide.addEventListener('change', measure);
-    measure();
-  }
+  /* ---------- Hero: a still photo (the first frame of the old clip), no scroll video ---------- */
+  function initScrollHero() { root.classList.add('no-scrub'); }
 
   /* ---------- Detail panel ---------- */
   function pressLink(press, cls) {
